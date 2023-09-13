@@ -10,6 +10,8 @@ from scripts.team_posession_tracking import launch_team_posession_tracking
 from scripts.ensemble_team_posession_tracking import (
     launch_ensemble_team_posession_tracking,
 )
+from scripts.ball_detection import launch_ball_detection
+from scripts.ball_tracking import launch_ball_tracking
 import logging
 
 logger = logging.getLogger()
@@ -120,6 +122,32 @@ def ensemble_team_posession_tracking():
         model=model,
         source_video_path="../clips/0bfacc_0.mp4",
         target_video_path="./output_video/ensemble_team_posession_tracking/0bfacc_0.mp4",
+    )
+
+
+@app.command()
+def ball_detection():
+    model = torch.hub.load(
+        "ultralytics/yolov5", "custom", "./models/yoloV5model", device=0
+    )
+    launch_ball_detection(
+        yoloNas=False,
+        model=model,
+        source_video_path="../clips/0bfacc_0.mp4",
+        target_video_path="./output_video/ball_detection/0bfacc_0.mp4",
+    )
+
+
+@app.command()
+def ball_tracking():
+    model = torch.hub.load(
+        "ultralytics/yolov5", "custom", "./models/yoloV5model", device=0
+    )
+    launch_ball_tracking(
+        yoloNas=False,
+        model=model,
+        source_video_path="../clips/0bfacc_0.mp4",
+        target_video_path="./output_video/ball_tracking/0bfacc_0.mp4",
     )
 
 

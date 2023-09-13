@@ -177,6 +177,31 @@ class Color:
         return np.array([self.r, self.g, self.b])
 
 
+def draw_circle_in_box(image: np.ndarray, box_coordinates: np.ndarray, color: Color):
+
+    center_x = int((box_coordinates[0] + box_coordinates[2]) / 2)
+    center_y = int((box_coordinates[1] + box_coordinates[3]) / 2)
+
+    # Get the radius of the circle.
+    radius = int((box_coordinates[2] - box_coordinates[0]) / 2)
+
+    # Draw the circle.
+    cv2.circle(image, (center_x, center_y), radius, color.bgr_tuple, 4)
+
+    return image
+
+
+def draw_circle(image: np.ndarray, box_coordinates: np.ndarray, color: Color):
+
+    center_x = int((box_coordinates[0] + box_coordinates[2]) / 2)
+    center_y = int((box_coordinates[1] + box_coordinates[3]) / 2)
+
+    # Draw the circle.
+    cv2.circle(image, (center_x, center_y), 1, color.bgr_tuple, 1)
+
+    return image
+
+
 def draw_rect(
     image: np.ndarray, rect: Rect, color: Color, thickness: int = 2
 ) -> np.ndarray:
@@ -346,6 +371,35 @@ class MarkerAnntator:
             annotated_image = draw_marker(
                 image=image, anchor=detection.rect.top_center, color=self.color
             )
+        return annotated_image
+
+
+@dataclass
+class BallAnntator:
+    def annotate(self, image: np.ndarray, detections: List[Detection]) -> np.ndarray:
+        annotated_image = image.copy()
+        for detection in detections:
+            rect = detection.rect
+            x2, y2 = rect.bottom_right.int_xy_tuple
+            x1, y1 = rect.top_left.int_xy_tuple
+            annotated_image = draw_circle_in_box(
+                image, [x1, y1, x2, y2], Color.from_hex_string("#FFFFFF")
+            )
+        return annotated_image
+
+
+@dataclass
+class BallTraceAnntator:
+    def annotate(self, image: np.ndarray, detections: List[Detection]) -> np.ndarray:
+        annotated_image = image.copy()
+        for detection in detections:
+            for inner_detection in detection:
+                rect = inner_detection.rect
+                x2, y2 = rect.bottom_right.int_xy_tuple
+                x1, y1 = rect.top_left.int_xy_tuple
+                annotated_image = draw_circle(
+                    image, [x1, y1, x2, y2], Color.from_hex_string("#FFFFFF")
+                )
         return annotated_image
 
 

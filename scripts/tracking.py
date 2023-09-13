@@ -4,7 +4,7 @@ from anns import *
 from yolox.tracker.byte_tracker import BYTETracker, STrack
 from onemetric.cv.utils.iou import box_iou_batch
 from scripts.ball_posession import get_player_in_possession
-
+from norfair import Detection as nfDetection
 
 from dataclasses import dataclass
 
@@ -65,6 +65,25 @@ def detections2boxes(
         ],
         dtype=float,
     )
+
+
+def detections2norfairDetection(
+    detections: List[Detection], with_confidence: bool = True
+) -> np.ndarray:
+
+    norfairDetections = []
+
+    for detection in detections:
+
+        x2, y2 = detection.rect.bottom_right.int_xy_tuple
+        x1, y1 = detection.rect.top_left.int_xy_tuple
+        center_x = int((x1 + x2) / 2)
+        center_y = int((y1 + y2) / 2)
+
+        norfairDetection = nfDetection(points=np.array([center_x, center_y]))
+        norfairDetections.append(norfairDetection)
+
+    return norfairDetections
 
 
 # converts List[STrack] into format that can be consumed by match_detections_with_tracks function
