@@ -148,6 +148,35 @@ class Detection:
         b, g, r = cv2.mean(center_crop)[:3]
         return Color(b=b, g=g, r=r)
 
+    def get_hsv_value(self, image: np.ndarray) -> np.ndarray:
+        """Returns the HSV value of an image.
+
+        Args:
+        image: The image to get the HSV value of.
+
+        Returns:
+        The HSV value of the image.
+        """
+
+        # Convert the image to HSV format.
+
+        x2, y2 = self.rect.bottom_right.int_xy_tuple
+        x1, y1 = self.rect.top_left.int_xy_tuple
+        crop = image[y1:y2, x1:x2, :]
+
+        # redimension the crop
+        crop = cv2.resize(crop, (100, 100))
+
+        hsv = cv2.cvtColor(crop, cv2.COLOR_BGR2HSV)
+
+        # Get the HSV values of the image.
+        h = hsv[:, :, 0]
+        s = hsv[:, :, 1]
+        v = hsv[:, :, 2]
+
+        # Return the HSV values of the image.
+        return np.array([h, s, v]).T
+
 
 def filter_detections_by_class(
     detections: List[Detection], class_name: str
@@ -446,11 +475,11 @@ class RectTeamAnntator:
 
 
 @dataclass
-class PosessionAnntator:
+class PosesionAnntator:
     def annotate(
         self,
         image: np.ndarray,
-        team_colors: Dict[str, Color],
+        team_colors: np.ndarray,
         posession: np.ndarray,
         color_in_posession: Color,
         player_in_posession: Detection,
