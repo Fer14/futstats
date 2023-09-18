@@ -26,7 +26,7 @@ def launch_team_posession_detection(
     ball_marker_annotator = MarkerAnntator(color=BALL_MARKER_FILL_COLOR)
     player_marker_annotator = RectTeamAnntator()
     player_posession_annotator = MarkerAnntator(color=PLAYER_MARKER_FILL_COLOR)
-    team_posession_annotator = PosessionAnntator()
+    team_posession_annotator = PosesionAnntator()
     posession_pipeline = PosessionPipeline()
     posession_calculator = PosessionCalculator(50, 50)
     color_in_posession = None

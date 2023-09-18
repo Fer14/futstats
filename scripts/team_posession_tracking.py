@@ -47,7 +47,7 @@ def launch_team_posession_tracking(
     posession_pipeline = PosessionPipeline()
     posession_calculator = PosessionCalculator(50, 50)
     color_in_posession = None
-    team_posession_annotator = PosessionAnntator()
+    team_posession_annotator = PosesionAnntator()
 
     # initiate tracker
     byte_tracker = BYTETracker(BYTETrackerArgs())

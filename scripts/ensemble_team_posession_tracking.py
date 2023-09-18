@@ -62,7 +62,7 @@ def launch_ensemble_team_posession_tracking(
     )
     posession_pipeline = PosessionPipeline()
     color_in_posession = None
-    team_posession_annotator = PosessionAnntator()
+    team_posession_annotator = PosesionAnntator()
     posession = np.array([50, 50])
     posession_calculator = PosessionCalculator(posession)
 
@@ -108,6 +108,10 @@ def launch_ensemble_team_posession_tracking(
         tracked_player_detections = filter_detections_by_class(
             detections=tracked_detections, class_name="player"
         )
+
+        save_detections(image=frame, detections=tracked_player_detections)
+
+        exit(0)
 
         # annotate video frame
         annotated_image = frame.copy()

@@ -1,6 +1,6 @@
-from typing import Generator
+from typing import Generator, List
 from dataclasses import dataclass
-
+from anns import Detection
 import matplotlib.pyplot as plt
 import numpy as np
 import os
@@ -22,7 +22,7 @@ def generate_frames(video_file: str) -> Generator[np.ndarray, None, None]:
 
 
 def plot_image(
-    image: np.ndarray, size: int = 12, save: bool = False, filename: str = "image.png"
+    image: np.ndarray, save: bool = False, filename: str = "crops_3/image.png"
 ) -> None:
     fig, ax = plt.subplots()
     ax.imshow(image[..., ::-1])
@@ -33,23 +33,12 @@ def plot_image(
         plt.savefig(filename, bbox_inches="tight", pad_inches=0)
 
 
-"""
-usage example:
-
-video_config = VideoConfig(
-    fps=30, 
-    width=1920, 
-    height=1080)
-video_writer = get_video_writer(
-    target_video_path=TARGET_VIDEO_PATH, 
-    video_config=video_config)
-
-for frame in frames:
-    ...
-    video_writer.write(frame)
-    
-video_writer.release()
-"""
+def save_detections(image: np.ndarray, detections: List[Detection]):
+    for i, detection in enumerate(detections):
+        x2, y2 = detection.rect.bottom_right.int_xy_tuple
+        x1, y1 = detection.rect.top_left.int_xy_tuple
+        crop = image[y1:y2, x1:x2, :]
+        plot_image(crop, True, f"./crops_2/{i}.png")
 
 
 # stores information about output video file, width and height of the frame must be equal to input video
