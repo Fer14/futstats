@@ -1,6 +1,7 @@
 from typing import Generator, List
 from dataclasses import dataclass
-from anns import Detection
+
+# from anns import Detection
 import matplotlib.pyplot as plt
 import numpy as np
 import os
@@ -33,12 +34,12 @@ def plot_image(
         plt.savefig(filename, bbox_inches="tight", pad_inches=0)
 
 
-def save_detections(image: np.ndarray, detections: List[Detection]):
-    for i, detection in enumerate(detections):
-        x2, y2 = detection.rect.bottom_right.int_xy_tuple
-        x1, y1 = detection.rect.top_left.int_xy_tuple
-        crop = image[y1:y2, x1:x2, :]
-        plot_image(crop, True, f"./crops_2/{i}.png")
+# def save_detections(image: np.ndarray, detections: List[Detection]):
+#     for i, detection in enumerate(detections):
+#         x2, y2 = detection.rect.bottom_right.int_xy_tuple
+#         x1, y1 = detection.rect.top_left.int_xy_tuple
+#         crop = image[y1:y2, x1:x2, :]
+#         plot_image(crop, True, f"./crops_2/{i}.png")
 
 
 # stores information about output video file, width and height of the frame must be equal to input video
