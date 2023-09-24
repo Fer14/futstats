@@ -123,6 +123,8 @@ def launch_ball_path(
             ball_pt_2d = ball_pt_2d.astype(int)
             field = cv2.circle(field, tuple(ball_pt_2d[0][0]), 10, (255, 0, 0), -1)
 
+        # TODO PONER FIELD ARRIBA A LA DERECHA DEL VIDEO
+
         # annotate video frame
         annotated_image = frame.copy()
 
@@ -131,7 +133,6 @@ def launch_ball_path(
             image=annotated_image, detections=ball_detections
         )
 
-        cv2.imwrite("../output_video/homography_ball/output.png", field)
         # save video frame
         video_writer.write(annotated_image)
 
