@@ -8,6 +8,9 @@ from posession_utils import *
 from super_gradients.training import models
 from mask_utils import get_perspective_transform
 import torch
+import logging
+
+logging.disable(logging.INFO)
 
 CLASSES = [
     "1",
@@ -121,9 +124,7 @@ def launch_ball_path(
             ball_pt = np.array([center], np.float32).reshape(-1, 1, 2)
             ball_pt_2d = cv2.perspectiveTransform(ball_pt, pred_homo)
             ball_pt_2d = ball_pt_2d.astype(int)
-            field = cv2.circle(field, tuple(ball_pt_2d[0][0]), 10, (255, 0, 0), -1)
-
-        # TODO PONER FIELD ARRIBA A LA DERECHA DEL VIDEO
+            field = cv2.circle(field, tuple(ball_pt_2d[0][0]), 10, (0, 0, 0), -1)
 
         # annotate video frame
         annotated_image = frame.copy()
@@ -133,6 +134,17 @@ def launch_ball_path(
             image=annotated_image, detections=ball_detections
         )
 
+        field_h = 410
+        field_w = 273
+        resized_field = cv2.resize(field, (field_w, field_h))
+        h, w, _ = annotated_image.shape
+        location_field_h = 1005
+        location_field_w = 100
+        annotated_image[
+            h - location_field_h : h - (location_field_h - field_h),
+            w - (field_w + location_field_w) : w - location_field_w,
+            :,
+        ] = resized_field
         # save video frame
         video_writer.write(annotated_image)
 
