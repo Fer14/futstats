@@ -124,7 +124,10 @@ def clean_detections(detections: List[Detection]):
     src_points = []
     dst_points = []
 
+    clean_detections = []
+
     for class_str, detection in keypoints_found.items():
+        clean_detections.append(detection)
         x2, y2 = detection.rect.bottom_right.int_xy_tuple
         x1, y1 = detection.rect.top_left.int_xy_tuple
         # get the center of the box
@@ -133,4 +136,4 @@ def clean_detections(detections: List[Detection]):
             src_points.append(center)
             dst_points.append(POINT2POINT2D[class_str])
 
-    return src_points, dst_points
+    return clean_detections, src_points, dst_points

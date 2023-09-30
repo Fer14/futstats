@@ -404,6 +404,16 @@ class MarkerAnntator:
 
 
 @dataclass
+class LandmarkAnntator:
+    def annotate(self, image: np.ndarray, detections: List[Detection]) -> np.ndarray:
+        annotated_image = image.copy()
+        for detection in detections:
+            rect = detection.rect
+            annotated_image = draw_rect(image, detection.rect, Color(255, 0, 0))
+        return annotated_image
+
+
+@dataclass
 class BallAnntator:
     def annotate(self, image: np.ndarray, detections: List[Detection]) -> np.ndarray:
         annotated_image = image.copy()

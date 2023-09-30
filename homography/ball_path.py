@@ -9,6 +9,7 @@ from super_gradients.training import models
 from mask_utils import get_perspective_transform
 import torch
 import logging
+from homography_utils import clean_detections
 
 logging.disable(logging.INFO)
 
@@ -33,26 +34,6 @@ CLASSES = [
 ]
 NUM_CLASES = len(CLASSES)
 
-POINT2POINT2D = {
-    "1": (60, 60),
-    "2": (310, 60),
-    "3": (520, 60),
-    "4": (850, 60),
-    "5": (1050, 60),
-    "6": (1300, 60),
-    "7": (520, 160),
-    "8": (850, 160),
-    "9": (310, 360),
-    "10": (550, 360),
-    "11": (820, 360),
-    "12": (1050, 360),
-    "13": (60, 1020),
-    "14": (680, 1020),
-    "15": (860, 1020),
-    "16": (1300, 1020),
-    "c": (680, 850),
-}
-
 
 def launch_ball_path(
     yoloNas: bool,
@@ -66,19 +47,24 @@ def launch_ball_path(
     field_model = models.get(
         "yolo_nas_l",
         num_classes=NUM_CLASES,
-        checkpoint_path="/home/fer/Escritorio/futstatistics/yolo_nas/checkpoints/FIELD_HOMOGRAPHY/ckpt_best.pth",
+        checkpoint_path="../models/LANDMARKS.pth",
     )
 
-    # initiate video writer
-    video_config = VideoConfig(fps=30, width=1920, height=1080)
+    video_writer_homography = get_video_writer(
+        target_video_path="../output_video/homography_ball/0bfacc_0_warped.mp4",
+        video_config=VideoConfig(fps=30, width=field.shape[1], height=field.shape[0]),
+    )
+
     video_writer = get_video_writer(
-        target_video_path=target_video_path, video_config=video_config
+        target_video_path=target_video_path,
+        video_config=VideoConfig(fps=30, width=1920, height=1080),
     )
 
     # get fresh video frame generator
     frame_iterator = iter(generate_frames(video_file=source_video_path))
 
     ball_marker_annotator = BallAnntator()
+    landmarks_annotator = LandmarkAnntator()
 
     # loop over frames
     for iteration, frame in enumerate(tqdm(frame_iterator, total=750)):
@@ -101,17 +87,9 @@ def launch_ball_path(
             detections=detections, class_name="ball"
         )
 
-        src_points = []
-        dst_points = []
-
-        for detection in field_detections:
-            x2, y2 = detection.rect.bottom_right.int_xy_tuple
-            x1, y1 = detection.rect.top_left.int_xy_tuple
-            # get the center of the box
-            center = (int((x1 + x2) / 2), int((y1 + y2) / 2))
-            if str(detection.class_name) in POINT2POINT2D:
-                src_points.append(center)
-                dst_points.append(POINT2POINT2D[str(detection.class_name)])
+        clean_field_detections, src_points, dst_points = clean_detections(
+            detections=field_detections
+        )
 
         pred_homo = get_perspective_transform(
             np.array(src_points), np.array(dst_points)
@@ -134,8 +112,12 @@ def launch_ball_path(
             image=annotated_image, detections=ball_detections
         )
 
-        field_h = 410
-        field_w = 273
+        annotated_image = landmarks_annotator.annotate(
+            image=annotated_image, detections=clean_field_detections
+        )
+
+        field_h = 273
+        field_w = 410
         resized_field = cv2.resize(field, (field_w, field_h))
         h, w, _ = annotated_image.shape
         location_field_h = 1005
@@ -147,9 +129,13 @@ def launch_ball_path(
         ] = resized_field
         # save video frame
         video_writer.write(annotated_image)
+        video_writer_homography.write(
+            cv2.warpPerspective(frame, pred_homo, (field.shape[1], field.shape[0]))
+        )
 
     # close output video
     video_writer.release()
+    video_writer_homography.release()
     # save field image
     cv2.imwrite("../output_video/homography_ball/output.png", field)
 
