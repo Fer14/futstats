@@ -1,8 +1,43 @@
-from typing import Dict, List
-from anns import Detection, Color
+import math
+from typing import Optional
 
 import numpy as np
+from annotations.anns import Color, Detection, Point
 from sklearn.cluster import KMeans
+
+
+# resolves which player is currently in ball possession based on player-ball proximity
+def get_player_in_possession(
+    player_detections: list[Detection], ball_detections: list[Detection], proximity: int
+) -> Optional[Detection]:
+    if len(ball_detections) != 1:
+        return None
+    ball_detection = ball_detections[0]
+    for player_detection in player_detections:
+        left_distance, right_distance = calculate_feet_distance(
+            player_detection.rect.bottom_right,
+            player_detection.rect.bottom_left,
+            ball_detection.rect.center,
+        )
+        if left_distance < proximity or right_distance < proximity:
+            return player_detection
+
+        # if player_detection.rect.pad(proximity).contains_point(
+        #     point=ball_detection.rect.center
+        # ):
+        #     return player_detection
+
+
+def euclidean_distance(point1: Point, point2: Point) -> float:
+    return math.sqrt((point1.x - point2.x) ** 2 + (point1.y - point2.y) ** 2)
+
+
+def calculate_feet_distance(
+    left_feet: Point, right_feet: Point, ball: Point
+) -> tuple[float, float]:
+    distance_to_center_right = euclidean_distance(right_feet, ball)
+    distance_to_center_left = euclidean_distance(left_feet, ball)
+    return (distance_to_center_right, distance_to_center_left)
 
 
 class PosessionPipeline:
@@ -10,14 +45,14 @@ class PosessionPipeline:
         self.kmeans = KMeans(n_clusters=2, random_state=0, n_init="auto")
         self.team_colors = {}
 
-    def trainKmeans(self, colors: List[Color]):
+    def trainKmeans(self, colors: list[Color]):
         colors = np.array([c.to_array().reshape(-1, 1) for c in colors])
         colors = colors.reshape(colors.shape[:2])
 
         self.kmeans.fit(colors)
 
     def get_team_colors(
-        self, image: np.ndarray, detections: List[Detection]
+        self, image: np.ndarray, detections: list[Detection]
     ) -> np.ndarray:
         colors = []
         for detection in detections:
@@ -29,7 +64,7 @@ class PosessionPipeline:
         self.team_colors["2"] = Color(r=r2, g=g2, b=b2)
         return self.team_colors
 
-    def cluster_color(self, image: np.ndarray, detection: List[Detection]) -> Color:
+    def cluster_color(self, image: np.ndarray, detection: list[Detection]) -> Color:
         if detection == []:
             return None
         if isinstance(detection, list):
@@ -42,14 +77,14 @@ class PosessionPipeline:
         return Color(r=r1, g=g1, b=b1)
 
     def cluster_detection(
-        self, image: np.ndarray, detections: List[Detection]
-    ) -> List[Detection]:
+        self, image: np.ndarray, detections: list[Detection]
+    ) -> list[Detection]:
         for detection in detections:
             color = self.cluster_color(image, detection)
             detection.color = color
         return detections
 
-    def vote_color(self, colors: List[Color]) -> Color:
+    def vote_color(self, colors: list[Color]) -> Color:
         ## get the most common color
         color = max(set(colors), key=colors.count)
         return color
@@ -57,9 +92,9 @@ class PosessionPipeline:
     def cluster_detection_ensembled(
         self,
         image: np.ndarray,
-        detections: List[Detection],
-        past_detections=Dict[int, List[Detection]],
-    ) -> List[Detection]:
+        detections: list[Detection],
+        past_detections=dict[int, list[Detection]],
+    ) -> list[Detection]:
         for detection in detections:
             colors = []
             colors.append(self.cluster_color(image, detection))
@@ -81,7 +116,7 @@ class PosessionCalculator:
         self.team2_posession = posession[1]
 
     def calculate_posession(
-        self, color_in_posession: Color, team_colors: Dict[str, Color]
+        self, color_in_posession: Color, team_colors: dict[str, Color]
     ) -> np.ndarray:
         """When the the is a color in posession, the posession is calculated
         else the posession is calculated based on the previous posession
@@ -130,13 +165,13 @@ class TeamPosesion:
         self.team1 = Team(id=1, posesion=posession[0])
         self.team2 = Team(id=2, posesion=posession[1])
 
-    def team_colors(self) -> Dict[str, Color]:
+    def team_colors(self) -> dict[str, Color]:
         return {"1": self.team1.marker_color, "2": self.team2.marker_color}
 
     def team_in_posession(self) -> Team:
         return self.team1 if self.team1.posesion > self.team2.posesion else self.team2
 
-    def train_color_kmeans(self, colors: List[Color]):
+    def train_color_kmeans(self, colors: list[Color]):
         colors = np.array([c.to_array().reshape(-1, 1) for c in colors])
         colors = colors.reshape(colors.shape[:2])
         self.color_kmeans.fit(colors)
@@ -144,7 +179,7 @@ class TeamPosesion:
     def train_hsv_kmeans(self, hsvs):
         self.hsv_kmeans.fit(np.array(hsvs).reshape(len(hsvs), -1))
 
-    def get_team_colors(self, image: np.ndarray, detections: List[Detection]):
+    def get_team_colors(self, image: np.ndarray, detections: list[Detection]):
         colors = []
         hsvs = []
         for detection in detections:
@@ -166,7 +201,7 @@ class TeamPosesion:
         self.team1.centroid = h_s_v_1
         self.team2.centroid = h_s_v_2
 
-    def cluster_color(self, image: np.ndarray, detection: List[Detection]) -> Color:
+    def cluster_color(self, image: np.ndarray, detection: list[Detection]) -> Color:
         if detection == []:
             return None
         if isinstance(detection, list):
@@ -185,8 +220,8 @@ class TeamPosesion:
         return color
 
     def cluster_detections(
-        self, image: np.ndarray, detections: List[Detection]
-    ) -> List[Detection]:
+        self, image: np.ndarray, detections: list[Detection]
+    ) -> list[Detection]:
         for detection in detections:
             color = self.cluster_color(image, detection)
             detection.color = color

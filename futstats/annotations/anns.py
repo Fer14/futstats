@@ -1,12 +1,25 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional, Tuple
+from dataclasses import dataclass
+from typing import Optional
 
 import cv2
 import numpy as np
 
-from video_utils import *
+
+def update_stack_detections(
+    detections_stack: dict[int, list[Detection]],
+    detections: list[Detection],
+    len_detections_stack: int = 3,
+) -> dict[int, list[Detection]]:
+
+    for detection in detections:
+        if detection.tracker_id not in detections_stack:
+            detections_stack[detection.tracker_id] = []
+        if len(detections_stack[detection.tracker_id]) > len_detections_stack:
+            detections_stack[detection.tracker_id].pop(0)
+        detections_stack[detection.tracker_id].append(detection)
+    return detections_stack
 
 
 @dataclass(frozen=True)
@@ -15,7 +28,7 @@ class Point:
     y: float
 
     @property
-    def int_xy_tuple(self) -> Tuple[int, int]:
+    def int_xy_tuple(self) -> tuple[int, int]:
         return int(self.x), int(self.y)
 
 
@@ -95,7 +108,7 @@ class Detection:
     color: Optional[Color] = None
 
     @classmethod
-    def from_yolo5(cls, pred: np.ndarray, names: Dict[int, str]) -> List[Detection]:
+    def from_yolo5(cls, pred: np.ndarray, names: dict[int, str]) -> list[Detection]:
         result = []
         for x_min, y_min, x_max, y_max, confidence, class_id in pred:
             class_id = int(class_id)
@@ -115,7 +128,7 @@ class Detection:
         return result
 
     @classmethod
-    def from_yoloNas(cls, pred: np.ndarray) -> List[Detection]:
+    def from_yoloNas(cls, pred: np.ndarray) -> list[Detection]:
         boxes = pred.prediction.bboxes_xyxy
         labels = pred.prediction.labels
         confidence = pred.prediction.confidence
@@ -179,8 +192,8 @@ class Detection:
 
 
 def filter_detections_by_class(
-    detections: List[Detection], class_name: str
-) -> List[Detection]:
+    detections: list[Detection], class_name: str
+) -> list[Detection]:
     return [detection for detection in detections if detection.class_name == class_name]
 
 
@@ -194,7 +207,7 @@ class Color:
     b: int
 
     @property
-    def bgr_tuple(self) -> Tuple[int, int, int]:
+    def bgr_tuple(self) -> tuple[int, int, int]:
         return self.b, self.g, self.r
 
     @classmethod
@@ -308,18 +321,15 @@ def draw_ellipse(
 
 @dataclass
 class BaseAnnotator:
-    colors: List[Color]
     thickness: int
 
-    def annotate(self, image: np.ndarray, detections: List[Detection]) -> np.ndarray:
+    def annotate(self, image: np.ndarray, detections: list[Detection]) -> np.ndarray:
         annotated_image = image.copy()
         for detection in detections:
             annotated_image = draw_ellipse(
                 image=image,
                 rect=detection.rect,
-                color=detection.color
-                if detection.color
-                else self.colors[detection.class_id],
+                color=detection.color,
                 thickness=self.thickness,
             )
         return annotated_image
@@ -394,7 +404,7 @@ class MarkerAnntator:
 
     color: Color
 
-    def annotate(self, image: np.ndarray, detections: List[Detection]) -> np.ndarray:
+    def annotate(self, image: np.ndarray, detections: list[Detection]) -> np.ndarray:
         annotated_image = image.copy()
         for detection in detections:
             annotated_image = draw_marker(
@@ -405,7 +415,7 @@ class MarkerAnntator:
 
 @dataclass
 class LandmarkAnntator:
-    def annotate(self, image: np.ndarray, detections: List[Detection]) -> np.ndarray:
+    def annotate(self, image: np.ndarray, detections: list[Detection]) -> np.ndarray:
         annotated_image = image.copy()
         for detection in detections:
             rect = detection.rect
@@ -415,7 +425,7 @@ class LandmarkAnntator:
 
 @dataclass
 class BallAnntator:
-    def annotate(self, image: np.ndarray, detections: List[Detection]) -> np.ndarray:
+    def annotate(self, image: np.ndarray, detections: list[Detection]) -> np.ndarray:
         annotated_image = image.copy()
         for detection in detections:
             rect = detection.rect
@@ -429,7 +439,7 @@ class BallAnntator:
 
 @dataclass
 class BallTraceAnntator:
-    def annotate(self, image: np.ndarray, detections: List[Detection]) -> np.ndarray:
+    def annotate(self, image: np.ndarray, detections: list[Detection]) -> np.ndarray:
         annotated_image = image.copy()
         for detection in detections:
             for inner_detection in detection:
@@ -445,7 +455,7 @@ class BallTraceAnntator:
 @dataclass
 class MarkerPosessionPlayerAnntator:
     def annotate(
-        self, image: np.ndarray, detections: List[Detection], color: Color
+        self, image: np.ndarray, detections: list[Detection], color: Color
     ) -> np.ndarray:
         annotated_image = image.copy()
         for detection in detections:
@@ -457,7 +467,7 @@ class MarkerPosessionPlayerAnntator:
 
 @dataclass
 class MarkerTeamAnntator:
-    def annotate(self, image: np.ndarray, detections: List[Detection]) -> np.ndarray:
+    def annotate(self, image: np.ndarray, detections: list[Detection]) -> np.ndarray:
         annotated_image = image.copy()
         for detection in detections:
             color = detection.get_color(image=annotated_image)
@@ -472,8 +482,8 @@ class RectTeamAnntator:
     def annotate(
         self,
         image: np.ndarray,
-        detections: List[Detection],
-        colors: List[Color],
+        detections: list[Detection],
+        colors: list[Color],
     ) -> np.ndarray:
         annotated_image = image.copy()
         for color, detection in zip(colors, detections):
@@ -590,11 +600,10 @@ class PosesionAnntator:
 # text annotator to display tracker_id
 @dataclass
 class TextAnnotator:
-    background_color: Color
     text_color: Color
     text_thickness: int
 
-    def annotate(self, image: np.ndarray, detections: List[Detection]) -> np.ndarray:
+    def annotate(self, image: np.ndarray, detections: list[Detection]) -> np.ndarray:
         annotated_image = image.copy()
         for detection in detections:
             # if tracker_id is not assigned skip annotation
@@ -619,9 +628,7 @@ class TextAnnotator:
             annotated_image = draw_filled_rect(
                 image=annotated_image,
                 rect=Rect(x=x, y=y, width=width, height=height).pad(padding=5),
-                color=detection.color
-                if detection.color != None
-                else self.background_color,
+                color=detection.color,
             )
 
             # draw text
@@ -632,4 +639,40 @@ class TextAnnotator:
                 color=self.text_color,
                 thickness=self.text_thickness,
             )
+        return annotated_image
+
+
+@dataclass
+class FieldAnnotator:
+    field: np.ndarray
+    field_height: int
+    field_width: int
+    field_y: int
+    field_x: int
+
+    def update(self, detections, homography_matrix):
+
+        for ball_detection in detections:
+            x2, y2 = ball_detection.rect.bottom_right.int_xy_tuple
+            x1, y1 = ball_detection.rect.top_left.int_xy_tuple
+            center = (int((x1 + x2) / 2), int((y1 + y2) / 2))
+            ball_pt = np.array([center], np.float32).reshape(-1, 1, 2)
+            ball_pt_2d = cv2.perspectiveTransform(ball_pt, homography_matrix)
+            ball_pt_2d = ball_pt_2d.astype(int)
+            self.field = cv2.circle(
+                self.field, tuple(ball_pt_2d[0][0]), 10, (0, 0, 0), -1
+            )
+
+    def annotate(self, image) -> np.ndarray:
+
+        annotated_image = image.copy()
+
+        resized_field = cv2.resize(self.field, (self.field_width, self.field_height))
+        h, w, _ = annotated_image.shape
+        annotated_image[
+            h - self.field_y : h - (self.field_y - self.field_height),
+            w - (self.field_width + self.field_x) : w - self.field_x,
+            :,
+        ] = resized_field
+
         return annotated_image

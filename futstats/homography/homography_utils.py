@@ -1,8 +1,6 @@
-import sys
 from sklearn.cluster import KMeans
 
-sys.path.append("..")
-from anns import *
+from annotations.anns import Detection
 
 
 POINT2POINT2D = {
@@ -27,7 +25,7 @@ POINT2POINT2D = {
 }
 
 
-def clean_detections(detections: List[Detection]):
+def clean_detections(detections: list[Detection]):
     keypoints_found = {}
 
     centers_found = []

@@ -1,40 +1,32 @@
+import numpy as np
 from tqdm import tqdm
-from tqdm import tqdm
-from video_utils import *
-from anns import *
 from yolox.tracker.byte_tracker import BYTETracker, STrack
-from onemetric.cv.utils.iou import box_iou_batch
-from scripts.ball_posession import get_player_in_possession
-from scripts.tracking import (
-    detections2boxes,
+
+from annotations.anns import (
+    Detection,
+    Color,
+    BaseAnnotator,
+    MarkerAnntator,
+    PosesionAnntator,
+    TextAnnotator,
+    BallAnntator,
+    filter_detections_by_class,
+)
+from posession.posession_utils import TeamPosesion, get_player_in_possession
+from tracking.bytrack_utils import (
     BYTETrackerArgs,
+    detections2boxes,
     match_detections_with_tracks,
 )
-from posession_utils import *
+from video.video_utils import VideoConfig, generate_frames, get_video_writer
 
 
-def update_stack_detections(
-    detections_stack: Dict[int, List[Detection]],
-    detections: List[Detection],
-    len_detections_stack: int = 3,
-) -> Dict[int, List[Detection]]:
-
-    for detection in detections:
-        if detection.tracker_id not in detections_stack:
-            detections_stack[detection.tracker_id] = []
-        if len(detections_stack[detection.tracker_id]) > len_detections_stack:
-            detections_stack[detection.tracker_id].pop(0)
-        detections_stack[detection.tracker_id].append(detection)
-    return detections_stack
-
-
-def launch_ensemble_team_posession_tracking(
+def launch_hsv_team_posession_tracking(
     yoloNas: bool,
     model,
     target_video_path: str,
     source_video_path: str,
     player_in_possession_proximity: int = 45,
-    len_detections_stack: int = 5,
 ):
 
     # initiate video writer
@@ -47,29 +39,21 @@ def launch_ensemble_team_posession_tracking(
     frame_iterator = iter(generate_frames(video_file=source_video_path))
 
     # initiate annotators
-    base_annotator = BaseAnnotator(
-        colors=[BALL_COLOR, PLAYER_COLOR, PLAYER_COLOR, REFEREE_COLOR],
-        thickness=THICKNESS,
-    )
+    base_annotator = BaseAnnotator(thickness=2)
 
     player_text_annotator = TextAnnotator(
-        PLAYER_COLOR, text_color=Color(255, 255, 255), text_thickness=2
+        text_color=Color(255, 255, 255), text_thickness=2
     )
 
-    ball_marker_annotator = MarkerAnntator(color=BALL_MARKER_FILL_COLOR)
-    player_in_possession_marker_annotator = MarkerAnntator(
-        color=PLAYER_MARKER_FILL_COLOR
-    )
-    posession_pipeline = PosessionPipeline()
-    color_in_posession = None
-    team_posession_annotator = PosesionAnntator()
-    posession = np.array([50, 50])
-    posession_calculator = PosessionCalculator(posession)
+    ball_marker_annotator = BallAnntator()
+
+    player_in_possession_marker_annotator = MarkerAnntator(color=Color(255, 0, 0))
+
+    team_posesion_annotator = PosesionAnntator()
+    team_posesion = TeamPosesion(posession=np.array([50, 50]))
 
     # initiate tracker
     byte_tracker = BYTETracker(BYTETrackerArgs())
-
-    detections_stack = {}
 
     # loop over frames
     for iteration, frame in enumerate(tqdm(frame_iterator, total=750)):
@@ -109,31 +93,18 @@ def launch_ensemble_team_posession_tracking(
             detections=tracked_detections, class_name="player"
         )
 
-        save_detections(image=frame, detections=tracked_player_detections)
-
-        exit(0)
-
         # annotate video frame
         annotated_image = frame.copy()
 
         if iteration == 0:
-            team_colors = posession_pipeline.get_team_colors(
+            team_posesion.get_team_colors(
                 image=annotated_image,
                 detections=player_detections,
             )
 
-        tracked_player_detections_colored = (
-            posession_pipeline.cluster_detection_ensembled(
-                image=annotated_image,
-                detections=tracked_player_detections,
-                past_detections=detections_stack,
-            )
-        )
-
-        detections_stack = update_stack_detections(
-            detections_stack=detections_stack,
-            detections=tracked_player_detections_colored,
-            len_detections_stack=len_detections_stack,
+        tracked_player_detections_colored = team_posesion.cluster_detections(
+            image=annotated_image,
+            detections=tracked_player_detections,
         )
 
         # calculate player in possession
@@ -143,22 +114,15 @@ def launch_ensemble_team_posession_tracking(
             proximity=player_in_possession_proximity,
         )
 
-        color_in_posession = (
-            player_in_possession_detection.color
-            if player_in_possession_detection
-            else color_in_posession
-        )
+        team_in_posession = team_posesion.team_in_posession()
 
-        posession = posession_calculator.calculate_posession(
-            color_in_posession=color_in_posession,
-            team_colors=team_colors,
-        )
-
-        annotated_image = team_posession_annotator.annotate(
+        annotated_image = team_posesion_annotator.annotate(
             image=annotated_image,
-            team_colors=team_colors,
-            posession=posession,
-            color_in_posession=color_in_posession,
+            team_colors=team_posesion.team_colors(),
+            posession=team_posesion.calculate_posession(
+                detection_in_posession=player_in_possession_detection
+            ),
+            color_in_posession=team_in_posession.marker_color,
             player_in_posession=player_in_possession_detection,
         )
 
@@ -170,16 +134,18 @@ def launch_ensemble_team_posession_tracking(
             image=annotated_image,
             detections=tracked_player_detections_colored,
         )
-        # Ball marker annotation
-        annotated_image = ball_marker_annotator.annotate(
-            image=annotated_image, detections=ball_detections
-        )
+
         # Player in possession marker annotation
         annotated_image = player_in_possession_marker_annotator.annotate(
             image=annotated_image,
             detections=[player_in_possession_detection]
             if player_in_possession_detection
             else [],
+        )
+
+        # Ball marker annotation
+        annotated_image = ball_marker_annotator.annotate(
+            image=annotated_image, detections=ball_detections
         )
 
         # save video frame
