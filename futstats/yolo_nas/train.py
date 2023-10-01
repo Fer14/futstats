@@ -68,7 +68,7 @@ EPOCHS = 200
 MODEL_ARCH = "yolo_nas_l"
 BATCH_SIZE = 8
 CHECKPOINT_DIR = "./checkpoints"
-LOCATION = "../datasets/dataset5_field/"
+LOCATION = "../../../datasets/dataset5_field/"
 CLASSES = [
     "1",
     "10",
