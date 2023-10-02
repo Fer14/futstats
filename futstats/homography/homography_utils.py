@@ -1,6 +1,6 @@
 from sklearn.cluster import KMeans
 
-from annotations.anns import Detection
+from futstats.annotations.anns import Detection
 
 
 POINT2POINT2D = {
@@ -27,10 +27,10 @@ POINT2POINT2D = {
 
 def clean_detections(detections: list[Detection]):
     keypoints_found = {}
-
     centers_found = []
+    pred_detections = detections.copy()
 
-    for detection in detections:
+    for detection in pred_detections:
 
         if detection.class_name == "c":
             centers_found.append(detection)
@@ -48,7 +48,7 @@ def clean_detections(detections: list[Detection]):
 
     centers_found = []
 
-    for detection in detections:
+    for detection in pred_detections:
         x2, y2 = detection.rect.bottom_right.int_xy_tuple
         x1, y1 = detection.rect.top_left.int_xy_tuple
 
@@ -66,58 +66,103 @@ def clean_detections(detections: list[Detection]):
 
     center_points = []
 
-    for center in centers_found:
-        x2, y2 = center.rect.bottom_right.int_xy_tuple
-        x1, y1 = center.rect.top_left.int_xy_tuple
+    # if there are just 2 points and there are closer that a specific distance, just keep the one with more confidence
+    if len(centers_found) == 2:
+        x2, y2 = centers_found[0].rect.bottom_right.int_xy_tuple
+        x1, y1 = centers_found[0].rect.top_left.int_xy_tuple
 
-        # get center of x1,y1 x2,y2
+        x2_2, y2_2 = centers_found[1].rect.bottom_right.int_xy_tuple
+        x1_2, y1_2 = centers_found[1].rect.top_left.int_xy_tuple
+
         center_point = (int((x1 + x2) / 2), int((y1 + y2) / 2))
-        center_points.append(center_point)
+        center_point_2 = (int((x1_2 + x2_2) / 2), int((y1_2 + y2_2) / 2))
 
-    kmeans = KMeans(n_clusters=2, random_state=0, n_init="auto")
-    kmeans.fit(center_points)
-    sides = {}
+        if (
+            abs(center_point[0] - center_point_2[0]) < 50
+            and abs(center_point[1] - center_point_2[1]) < 50
+        ):
+            if centers_found[0].confidence > centers_found[1].confidence:
+                centers_found.pop(1)
+            else:
+                centers_found.pop(0)
 
-    if kmeans.cluster_centers_[0][0] < kmeans.cluster_centers_[1][0]:
-        sides[0] = "left"
-        sides[1] = "right"
+        # if centers found is located to the right of the pred_detections with class name 14 and 15, rename the classname to cright
+
+        if "14" in keypoints_found and "15" in keypoints_found:
+
+            if (
+                centers_found[0].rect.top_left.int_xy_tuple[0]
+                > keypoints_found["14"].rect.top_left.int_xy_tuple[0]
+                and centers_found[0].rect.top_left.int_xy_tuple[0]
+                > keypoints_found["15"].rect.top_left.int_xy_tuple[0]
+            ):
+                centers_found[0].class_name = "cright"
+                keypoints_found["cright"] = centers_found[0]
+
+            elif (
+                centers_found[0].rect.top_left.int_xy_tuple[0]
+                < keypoints_found["14"].rect.top_left.int_xy_tuple[0]
+                and centers_found[0].rect.top_left.int_xy_tuple[0]
+                < keypoints_found["15"].rect.top_left.int_xy_tuple[0]
+            ):
+                centers_found[0].class_name = "cleft"
+                keypoints_found["cleft"] = centers_found[0]
+
     else:
-        sides[0] = "right"
-        sides[1] = "left"
+        for center in centers_found:
+            x2, y2 = center.rect.bottom_right.int_xy_tuple
+            x1, y1 = center.rect.top_left.int_xy_tuple
 
-    left_centers = []
-    right_centers = []
+            # get center of x1,y1 x2,y2
+            center_point = (int((x1 + x2) / 2), int((y1 + y2) / 2))
+            center_points.append(center_point)
 
-    for center in centers_found:
-        x2, y2 = center.rect.bottom_right.int_xy_tuple
-        x1, y1 = center.rect.top_left.int_xy_tuple
+        kmeans = KMeans(n_clusters=2, random_state=0, n_init="auto")
+        kmeans.fit(center_points)
+        sides = {}
 
-        center_point = (int((x1 + x2) / 2), int((y1 + y2) / 2))
-
-        if sides[kmeans.predict([center_point])[0]] == "left":
-            left_centers.append(center)
+        if kmeans.cluster_centers_[0][0] < kmeans.cluster_centers_[1][0]:
+            sides[0] = "left"
+            sides[1] = "right"
         else:
-            right_centers.append(center)
+            sides[0] = "right"
+            sides[1] = "left"
 
-    higher_left_conf = -1
-    higher_left_conf_center = None
+        left_centers = []
+        right_centers = []
 
-    for left_center in left_centers:
-        if left_center.confidence > higher_left_conf:
-            higher_left_conf_center = left_center
-            higher_left_conf = left_center.confidence
+        for center in centers_found:
+            x2, y2 = center.rect.bottom_right.int_xy_tuple
+            x1, y1 = center.rect.top_left.int_xy_tuple
 
-    keypoints_found["cleft"] = higher_left_conf_center
+            center_point = (int((x1 + x2) / 2), int((y1 + y2) / 2))
 
-    higher_right_conf = -1
-    higher_right_conf_center = None
+            if sides[kmeans.predict([center_point])[0]] == "left":
+                left_centers.append(center)
+            else:
+                right_centers.append(center)
 
-    for right_center in right_centers:
-        if right_center.confidence > higher_right_conf:
-            higher_right_conf_center = right_center
-            higher_right_conf = right_center.confidence
+        higher_left_conf = -1
+        higher_left_conf_center = None
 
-    keypoints_found["cright"] = higher_right_conf_center
+        for left_center in left_centers:
+            if left_center.confidence > higher_left_conf:
+                higher_left_conf_center = left_center
+                higher_left_conf = left_center.confidence
+
+        higher_left_conf_center.class_name = "cleft"
+        keypoints_found["cleft"] = higher_left_conf_center
+
+        higher_right_conf = -1
+        higher_right_conf_center = None
+
+        for right_center in right_centers:
+            if right_center.confidence > higher_right_conf:
+                higher_right_conf_center = right_center
+                higher_right_conf = right_center.confidence
+
+        higher_right_conf_center.class_name = "cright"
+        keypoints_found["cright"] = higher_right_conf_center
 
     src_points = []
     dst_points = []
@@ -130,8 +175,7 @@ def clean_detections(detections: list[Detection]):
         x1, y1 = detection.rect.top_left.int_xy_tuple
         # get the center of the box
         center = (int((x1 + x2) / 2), int((y1 + y2) / 2))
-        if class_str in POINT2POINT2D:
-            src_points.append(center)
-            dst_points.append(POINT2POINT2D[class_str])
+        src_points.append(center)
+        dst_points.append(POINT2POINT2D[class_str])
 
     return clean_detections, src_points, dst_points
