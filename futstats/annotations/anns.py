@@ -418,8 +418,17 @@ class LandmarkAnntator:
     def annotate(self, image: np.ndarray, detections: list[Detection]) -> np.ndarray:
         annotated_image = image.copy()
         for detection in detections:
-            rect = detection.rect
             annotated_image = draw_rect(image, detection.rect, Color(255, 0, 0))
+            x2, y2 = detection.rect.bottom_right.int_xy_tuple
+            x1, y1 = detection.rect.top_left.int_xy_tuple
+            cx, cy = (int((x1 + x2) / 2), int((y1 + y2) / 2))
+            annotated_image = draw_text(
+                annotated_image,
+                Point(cx, cy),
+                detection.class_name,
+                Color(255, 0, 0),
+                thickness=2,
+            )
         return annotated_image
 
 
