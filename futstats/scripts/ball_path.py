@@ -95,7 +95,7 @@ def launch_ball_homography(
             detections=detections, class_name="ball"
         )
 
-        field_results = list(field_model.predict(frame, conf=0.3))[0]
+        field_results = list(field_model.predict(frame, conf=0.2))[0]
         field_detections = Detection.from_yoloNas(pred=field_results)
 
         clean_field_detections, src_points, dst_points = clean_detections(
