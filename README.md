@@ -33,6 +33,9 @@ https://stackoverflow.com/questions/56115874/how-to-convert-bounding-box-x1-y1-x
 
 #DATASETS
 https://github.com/cemunds/awesome-sports-camera-calibration#datasets
+
+https://github.com/vcg-uvic/sportsfield_release/blob/master/sports_field_registration.ipynb
+
 https://www.kaggle.com/competitions/dfl-bundesliga-data-shootout/data
 
     ## PLAYERS

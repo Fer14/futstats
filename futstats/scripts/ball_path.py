@@ -90,13 +90,14 @@ def launch_ball_homography(
                 pred=results.pred[0].cpu().numpy(), names=model.names
             )
 
-            # filter detections by class
         ball_detections = filter_detections_by_class(
             detections=detections, class_name="ball"
         )
 
-        field_results = list(field_model.predict(frame, conf=0.2))[0]
+        field_results = list(field_model.predict(frame, conf=0.25))[0]
         field_detections = Detection.from_yoloNas(pred=field_results)
+
+        # TODO hay algo que va raro aqui
 
         clean_field_detections, src_points, dst_points = clean_detections(
             detections=field_detections

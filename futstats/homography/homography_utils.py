@@ -88,25 +88,25 @@ def clean_detections(detections: list[Detection]):
 
         # if centers found is located to the right of the pred_detections with class name 14 and 15, rename the classname to cright
 
-        if "14" in keypoints_found and "15" in keypoints_found:
+        # if "14" in keypoints_found and "15" in keypoints_found:
 
-            if (
-                centers_found[0].rect.top_left.int_xy_tuple[0]
-                > keypoints_found["14"].rect.top_left.int_xy_tuple[0]
-                and centers_found[0].rect.top_left.int_xy_tuple[0]
-                > keypoints_found["15"].rect.top_left.int_xy_tuple[0]
-            ):
-                centers_found[0].class_name = "cright"
-                keypoints_found["cright"] = centers_found[0]
+        #     if (
+        #         centers_found[0].rect.top_left.int_xy_tuple[0]
+        #         > keypoints_found["14"].rect.top_left.int_xy_tuple[0]
+        #         and centers_found[0].rect.top_left.int_xy_tuple[0]
+        #         > keypoints_found["15"].rect.top_left.int_xy_tuple[0]
+        #     ):
+        #         centers_found[0].class_name = "cright"
+        #         keypoints_found["cright"] = centers_found[0]
 
-            elif (
-                centers_found[0].rect.top_left.int_xy_tuple[0]
-                < keypoints_found["14"].rect.top_left.int_xy_tuple[0]
-                and centers_found[0].rect.top_left.int_xy_tuple[0]
-                < keypoints_found["15"].rect.top_left.int_xy_tuple[0]
-            ):
-                centers_found[0].class_name = "cleft"
-                keypoints_found["cleft"] = centers_found[0]
+        #     elif (
+        #         centers_found[0].rect.top_left.int_xy_tuple[0]
+        #         < keypoints_found["14"].rect.top_left.int_xy_tuple[0]
+        #         and centers_found[0].rect.top_left.int_xy_tuple[0]
+        #         < keypoints_found["15"].rect.top_left.int_xy_tuple[0]
+        #     ):
+        #         centers_found[0].class_name = "cleft"
+        #         keypoints_found["cleft"] = centers_found[0]
 
     else:
         for center in centers_found:
