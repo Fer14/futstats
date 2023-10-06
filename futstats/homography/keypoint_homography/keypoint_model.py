@@ -3,6 +3,8 @@ import tensorflow as tf
 import segmentation_models as sm
 import cv2
 
+## from https://github.com/DonsetPG/narya/blob/master/narya/models/keras_models.py
+
 
 def _build_keypoint_preprocessing(input_shape, backbone):
     """Builds the preprocessing function for the Field Keypoint Detector Model."""
