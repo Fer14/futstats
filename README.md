@@ -79,3 +79,8 @@ https://www.kaggle.com/datasets/evilrobots/robocupsimdata/data
 
 #Anotator 
 https://github.com/kkoripl/NaryaKeyPointsDatasetCreator
+
+#soccer net
+https://github.com/SoccerNet/sn-calibration
+https://github.com/SilvioGiancola/SoccerNetv2-DevKit/tree/main/Task2-CameraShotSegmentation/BasicModel-segmentationhttps://www.soccer-net.org/challenges/2023
+https://github.com/mazatov/sn-calibration/blob/main/data_exploration_baseline.ipynb

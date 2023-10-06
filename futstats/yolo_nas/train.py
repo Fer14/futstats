@@ -65,10 +65,10 @@ EPOCHS = 200
 
 
 # FIELD LANDMARSK
-MODEL_ARCH = "yolo_nas_l"
-BATCH_SIZE = 8
+MODEL_ARCH = "yolo_nas_m"
+BATCH_SIZE = 16
 CHECKPOINT_DIR = "./checkpoints"
-LOCATION = "../../../datasets/dataset5_field/"
+LOCATION = "../../../datasets/dataset5_field_2/"
 CLASSES = [
     "1",
     "10",
@@ -96,48 +96,48 @@ EPOCHS = 100
 
 def main(data_format: str = "yolo", train: bool = True, test: bool = True):
 
-    if data_format == "coco":
-        train_dataset_params = {
-            "data_dir": LOCATION,
-            "subdir": "images/train",
-            "json_file": "train_corrected_annotations.coco.json",
-            "input_dim": [320, 320],
-            # "class_inclusion_list": class_inclusion_list,
-            "ignore_empty_annotations": False,
-        }
+    # if data_format == "coco":
+    #     train_dataset_params = {
+    #         "data_dir": LOCATION,
+    #         "subdir": "images/train",
+    #         "json_file": "train_corrected_annotations.coco.json",
+    #         "input_dim": [320, 320],
+    #         # "class_inclusion_list": class_inclusion_list,
+    #         "ignore_empty_annotations": False,
+    #     }
 
-        train_data = coco2017_train_yolo_nas(
-            dataset_params=train_dataset_params,
-            dataloader_params={"batch_size": BATCH_SIZE, "num_workers": 2},
-        )
+    #     train_data = coco2017_train_yolo_nas(
+    #         dataset_params=train_dataset_params,
+    #         dataloader_params={"batch_size": BATCH_SIZE, "num_workers": 2},
+    #     )
 
-        test_dataset_params = {
-            "data_dir": LOCATION,
-            "subdir": "images/test",
-            "json_file": "test_corrected_annotations.coco.json",
-            "input_dim": [320, 320],
-            # "class_inclusion_list": class_inclusion_list,
-            "ignore_empty_annotations": False,
-        }
+    #     test_dataset_params = {
+    #         "data_dir": LOCATION,
+    #         "subdir": "images/test",
+    #         "json_file": "test_corrected_annotations.coco.json",
+    #         "input_dim": [320, 320],
+    #         # "class_inclusion_list": class_inclusion_list,
+    #         "ignore_empty_annotations": False,
+    #     }
 
-        test_data = coco2017_val_yolo_nas(
-            dataset_params=test_dataset_params,
-            dataloader_params={"batch_size": BATCH_SIZE, "num_workers": 2},
-        )
+    #     test_data = coco2017_val_yolo_nas(
+    #         dataset_params=test_dataset_params,
+    #         dataloader_params={"batch_size": BATCH_SIZE, "num_workers": 2},
+    #     )
 
-        val_dataset_params = {
-            "data_dir": LOCATION,
-            "subdir": "images/val",
-            "json_file": "val_corrected_annotations.coco.json",
-            "input_dim": [320, 320],
-            # "class_inclusion_list": class_inclusion_list,
-            "ignore_empty_annotations": False,
-        }
+    #     val_dataset_params = {
+    #         "data_dir": LOCATION,
+    #         "subdir": "images/val",
+    #         "json_file": "val_corrected_annotations.coco.json",
+    #         "input_dim": [320, 320],
+    #         # "class_inclusion_list": class_inclusion_list,
+    #         "ignore_empty_annotations": False,
+    #     }
 
-        val_data = coco2017_val_yolo_nas(
-            dataset_params=val_dataset_params,
-            dataloader_params={"batch_size": BATCH_SIZE, "num_workers": 2},
-        )
+    #     val_data = coco2017_val_yolo_nas(
+    #         dataset_params=val_dataset_params,
+    #         dataloader_params={"batch_size": BATCH_SIZE, "num_workers": 2},
+    #     )
 
     if data_format == "yolo":
 
@@ -183,7 +183,7 @@ def main(data_format: str = "yolo", train: bool = True, test: bool = True):
         )
 
     train_params = {
-        "silent_mode": True,
+        "silent_mode": False,
         "average_best_models": True,
         "warmup_mode": "linear_epoch_step",
         "warmup_initial_lr": 1e-6,
@@ -244,7 +244,7 @@ def main(data_format: str = "yolo", train: bool = True, test: bool = True):
             model=model,
             training_params=train_params,
             train_loader=train_data,
-            valid_loader=test_data,
+            valid_loader=val_data,
         )
 
     if test:
@@ -257,7 +257,7 @@ def main(data_format: str = "yolo", train: bool = True, test: bool = True):
 
         trainer.test(
             model=best_model,
-            test_loader=val_data,
+            test_loader=test_data,
             test_metrics_list=DetectionMetrics_050(
                 score_thres=0.1,
                 top_k_predictions=300,
