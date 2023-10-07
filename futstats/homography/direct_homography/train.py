@@ -100,6 +100,16 @@ class HomographyModel:
             callbacks=[checkpoint_callback, early_stopping],
         )
 
+    def __call__(self, input_img):
+
+        image = preprocess_input(
+            cv2.resize(
+                cv2.cvtColor(cv2.imread(input_img), cv2.COLOR_BGR2RGB),
+                self.image_size,
+            )
+        )
+        return self.model.predict(image)
+
 
 class HomographyDataset(Sequence):
     def __init__(self, images_paths, labels_list, image_size, batch_size):

@@ -6,6 +6,8 @@ from super_gradients.training import Trainer, models
 from super_gradients.training.dataloaders.dataloaders import (
     coco2017_train_yolo_nas,
     coco2017_val_yolo_nas,
+    coco_detection_yolo_format_train,
+    coco_detection_yolo_format_val,
 )
 from super_gradients.training.losses import PPYoloELoss
 from super_gradients.training.metrics import (
@@ -21,10 +23,12 @@ DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
 
 # KEYPOINTS
-MODEL_ARCH = "yolo_nas_m"
-BATCH_SIZE = 8
+MODEL_ARCH = "yolo_nas_s"
+BATCH_SIZE = 16
 CHECKPOINT_DIR = "./checkpoints"
-LOCATION = "../../../datasets/dataset6_keypoints/dataset6_keypoints_coco"
+LOCATION = "/home/fer/Escritorio/futstatistics/datasets/dataset6_keypoints/dataset6_keypoints_coco"
+LOCATION = "/home/fer/Escritorio/futstatistics/datasets/dataset6_keypoints/dataset6_keypoints_YOLOV5"
+
 CLASSES = [
     "0",
     "1",
@@ -58,42 +62,12 @@ CLASSES = [
 ]
 
 NUM_CLASES = len(CLASSES)
-EXPERIMENT = "FIELD_KEYPOINTS"
+EXPERIMENT = "FIELD_KEYPOINTS_COCO"
+EXPERIMENT = "FIELD_KEYPOINTS_YOLO"
 EPOCHS = 200
 
 
-# # FIELD LANDMARSK
-# MODEL_ARCH = "yolo_nas_m"
-# BATCH_SIZE = 16
-# CHECKPOINT_DIR = "./checkpoints"
-# LOCATION = "../../../datasets/dataset5_field_2/"
-# CLASSES = [
-#     "1",
-#     "10",
-#     "11",
-#     "12",
-#     "13",
-#     "14",
-#     "15",
-#     "16",
-#     "2",
-#     "3",
-#     "4",
-#     "5",
-#     "6",
-#     "7",
-#     "8",
-#     "9",
-#     "c",
-# ]
-
-# NUM_CLASES = len(CLASSES)
-# EXPERIMENT = "FIELD_LANDMARKS"
-# EPOCHS = 100
-
-
-def main(data_format: str = "coco", train: bool = True, test: bool = True):
-
+def main(data_format: str = "yolo", train: bool = True, test: bool = False):
     if data_format == "coco":
         train_dataset_params = {
             "data_dir": LOCATION,
@@ -137,48 +111,47 @@ def main(data_format: str = "coco", train: bool = True, test: bool = True):
             dataloader_params={"batch_size": BATCH_SIZE, "num_workers": 2},
         )
 
-    # if data_format == "yolo":
+    if data_format == "yolo":
+        dataset_params = {
+            "data_dir": LOCATION,
+            "train_images_dir": "train/images",
+            "train_labels_dir": "train/labels_corrected",
+            "val_images_dir": "valid/images",
+            "val_labels_dir": "valid/labels_corrected",
+            "test_images_dir": "test/images",
+            "test_labels_dir": "test/labels_corrected",
+            "classes": CLASSES,
+        }
 
-    #     dataset_params = {
-    #         "data_dir": LOCATION,
-    #         "train_images_dir": "train/images",
-    #         "train_labels_dir": "train/labels",
-    #         "val_images_dir": "valid/images",
-    #         "val_labels_dir": "valid/labels",
-    #         "test_images_dir": "test/images",
-    #         "test_labels_dir": "test/labels",
-    #         "classes": CLASSES,
-    #     }
+        train_data = coco_detection_yolo_format_train(
+            dataset_params={
+                "data_dir": dataset_params["data_dir"],
+                "images_dir": dataset_params["train_images_dir"],
+                "labels_dir": dataset_params["train_labels_dir"],
+                "classes": dataset_params["classes"],
+            },
+            dataloader_params={"batch_size": BATCH_SIZE, "num_workers": 2},
+        )
 
-    #     train_data = coco_detection_yolo_format_train(
-    #         dataset_params={
-    #             "data_dir": dataset_params["data_dir"],
-    #             "images_dir": dataset_params["train_images_dir"],
-    #             "labels_dir": dataset_params["train_labels_dir"],
-    #             "classes": dataset_params["classes"],
-    #         },
-    #         dataloader_params={"batch_size": BATCH_SIZE, "num_workers": 2},
-    #     )
+        val_data = coco_detection_yolo_format_val(
+            dataset_params={
+                "data_dir": dataset_params["data_dir"],
+                "images_dir": dataset_params["val_images_dir"],
+                "labels_dir": dataset_params["val_labels_dir"],
+                "classes": dataset_params["classes"],
+            },
+            dataloader_params={"batch_size": BATCH_SIZE, "num_workers": 2},
+        )
 
-    #     val_data = coco_detection_yolo_format_val(
-    #         dataset_params={
-    #             "data_dir": dataset_params["data_dir"],
-    #             "images_dir": dataset_params["val_images_dir"],
-    #             "labels_dir": dataset_params["val_labels_dir"],
-    #             "classes": dataset_params["classes"],
-    #         },
-    #         dataloader_params={"batch_size": BATCH_SIZE, "num_workers": 2},
-    #     )
-
-    #     test_data = coco_detection_yolo_format_val(
-    #         dataset_params={
-    #             "data_dir": dataset_params["data_dir"],
-    #             "images_dir": dataset_params["test_images_dir"],
-    #             "labels_dir": dataset_params["test_labels_dir"],
-    #             "classes": dataset_params["classes"],
-    #         },
-    #         dataloader_params={"batch_size": BATCH_SIZE, "num_workers": 2},
-    #     )
+        test_data = coco_detection_yolo_format_val(
+            dataset_params={
+                "data_dir": dataset_params["data_dir"],
+                "images_dir": dataset_params["test_images_dir"],
+                "labels_dir": dataset_params["test_labels_dir"],
+                "classes": dataset_params["classes"],
+            },
+            dataloader_params={"batch_size": BATCH_SIZE, "num_workers": 2},
+        )
 
     train_params = {
         "silent_mode": False,
@@ -237,7 +210,6 @@ def main(data_format: str = "coco", train: bool = True, test: bool = True):
     trainer = Trainer(experiment_name=EXPERIMENT, ckpt_root_dir=CHECKPOINT_DIR)
 
     if train:
-
         trainer.train(
             model=model,
             training_params=train_params,
@@ -246,7 +218,6 @@ def main(data_format: str = "coco", train: bool = True, test: bool = True):
         )
 
     if test:
-
         best_model = models.get(
             MODEL_ARCH,
             num_classes=NUM_CLASES,
