@@ -24,10 +24,10 @@ DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
 # KEYPOINTS
 MODEL_ARCH = "yolo_nas_s"
-BATCH_SIZE = 16
+BATCH_SIZE = 64
 CHECKPOINT_DIR = "./checkpoints"
 LOCATION = "/home/fer/Escritorio/futstatistics/datasets/dataset6_keypoints/dataset6_keypoints_coco"
-LOCATION = "/home/fer/Escritorio/futstatistics/datasets/dataset6_keypoints/dataset6_keypoints_YOLOV5"
+# LOCATION = "/home/fer/Escritorio/futstatistics/datasets/dataset6_keypoints/dataset6_keypoints_YOLOV5"
 
 CLASSES = [
     "0",
@@ -63,11 +63,11 @@ CLASSES = [
 
 NUM_CLASES = len(CLASSES)
 EXPERIMENT = "FIELD_KEYPOINTS_COCO"
-EXPERIMENT = "FIELD_KEYPOINTS_YOLO"
-EPOCHS = 200
+# EXPERIMENT = "FIELD_KEYPOINTS_YOLO"
+EPOCHS = 400
 
 
-def main(data_format: str = "yolo", train: bool = True, test: bool = False):
+def main(data_format: str = "coco", train: bool = True, test: bool = False):
     if data_format == "coco":
         train_dataset_params = {
             "data_dir": LOCATION,
