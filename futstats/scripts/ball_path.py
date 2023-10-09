@@ -49,7 +49,6 @@ def launch_ball_homography(
     target_warped_video_path: str,
     target_ball_track_path: str,
 ):
-
     field = cv2.cvtColor(cv2.imread(field_img_path), cv2.COLOR_BGR2RGB)
 
     field_model = models.get(
@@ -79,7 +78,6 @@ def launch_ball_homography(
 
     # loop over frames
     for iteration, frame in enumerate(tqdm(frame_iterator, total=750)):
-
         # run detector
         if yoloNas:
             results = list(model.predict(frame, conf=0.25))[0]
@@ -106,6 +104,8 @@ def launch_ball_homography(
         pred_homo = get_perspective_transform(
             np.array(src_points), np.array(dst_points)
         )
+
+        ## sustituir lo de arriba por cv2.findHomography(src, dst, cv2.RANSAC, 5)
 
         field_annotator.update(ball_detections, pred_homo)
 
