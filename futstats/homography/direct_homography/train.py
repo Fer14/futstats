@@ -201,11 +201,9 @@ class HomographyDataset(Sequence):
             y.append(matrix)
 
         if self.double_input:
-            output = np.array(X_images), np.array(X_masks), np.array(y)
+            return [np.array(X_images), np.array(X_masks)], np.array(y)
         else:
-            output = np.array(X), np.array(y)
-
-        return output
+            return np.array(X), np.array(y)
 
 
 def get_number_from_string(s):
