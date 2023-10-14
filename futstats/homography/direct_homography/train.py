@@ -157,7 +157,7 @@ class HomographyDataset(Sequence):
 
         return np.array(homography_matrix).reshape(3, 3)
 
-    def _read_mat_madk(self, file_path: str):
+    def _read_mat_mask(self, file_path: str):
         mat_contents = scipy.io.loadmat(file_path)
         return mat_contents["grass"]
 
@@ -184,7 +184,7 @@ class HomographyDataset(Sequence):
                     )
                 )
                 X_images.append(image)
-                mask = self._read_mat_madk(self.input_paths[i][1])
+                mask = self._read_mat_mask(self.input_paths[i][1])
                 X_masks.append(mask)
             else:
                 image = preprocess_input(
@@ -215,7 +215,7 @@ def get_number_from_string(s):
         return 0  # If no number is found, return 0
 
 
-def main(train: bool = True, double_input: bool = True):
+def main(train: bool = True, double_input: bool = False):
     DATA_DIR = "/home/fer/Escritorio/futstatistics/datasets/dataset7_homography"
     BATCH_SIZE = 8
 
@@ -231,9 +231,7 @@ def main(train: bool = True, double_input: bool = True):
     if double_input:
         mask_1 = glob.glob(os.path.join(DATA_DIR, "test") + "/*.mat")
         mask_2 = glob.glob(os.path.join(DATA_DIR, "train_val") + "/*.mat")
-
         masks = sorted(mask_1 + mask_2, key=get_number_from_string)
-
         inputs = [(image, mask) for image, mask in zip(images, masks)]
     else:
         inputs = images
