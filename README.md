@@ -1,6 +1,6 @@
 # Fμτsτατs
 
-![logo](imgs/logos/logo_black.png)
+![logo](imgs/logos/logo_black2.png)
 
 Football Statistics generator with Python
 
