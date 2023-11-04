@@ -2,7 +2,7 @@
 *.pt
 *.pyc
 *.zip
-*.png
 *.jpg
 models/
+crops/
 futstats.egg-info/
