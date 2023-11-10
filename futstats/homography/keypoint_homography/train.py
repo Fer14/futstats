@@ -21,13 +21,10 @@ from super_gradients.training.models.detection_models.pp_yolo_e import (
 
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
-
 # KEYPOINTS
-MODEL_ARCH = "yolo_nas_s"
-BATCH_SIZE = 64
+MODEL_ARCH = "yolo_nas_m"
 CHECKPOINT_DIR = "./checkpoints"
-LOCATION = "/home/fer/Escritorio/futstatistics/datasets/dataset6_keypoints/dataset6_keypoints_coco"
-# LOCATION = "/home/fer/Escritorio/futstatistics/datasets/dataset6_keypoints/dataset6_keypoints_YOLOV5"
+
 
 CLASSES = [
     "0",
@@ -62,13 +59,16 @@ CLASSES = [
 ]
 
 NUM_CLASES = len(CLASSES)
-EXPERIMENT = "FIELD_KEYPOINTS_COCO"
-# EXPERIMENT = "FIELD_KEYPOINTS_YOLO"
-EPOCHS = 400
+EPOCHS = 500
 
 
 def main(data_format: str = "coco", train: bool = True, test: bool = False):
+    print(f"Selected data format: {data_format}")
     if data_format == "coco":
+        EXPERIMENT = "FIELD_KEYPOINTS_COCO_DATA_1"
+        LOCATION = "/home/fer/Escritorio/futstatistics/datasets/dataset6_keypoints/dataset6_keypoints_coco"
+        BATCH_SIZE = 64
+
         train_dataset_params = {
             "data_dir": LOCATION,
             "subdir": "images/train",
@@ -97,21 +97,29 @@ def main(data_format: str = "coco", train: bool = True, test: bool = False):
             dataloader_params={"batch_size": BATCH_SIZE, "num_workers": 2},
         )
 
-        val_dataset_params = {
-            "data_dir": LOCATION,
-            "subdir": "images/val",
-            "json_file": "val_corrected_annotations.coco.json",
-            "input_dim": [320, 320],
-            # "class_inclusion_list": class_inclusion_list,
-            "ignore_empty_annotations": False,
-        }
+        # val_dataset_params = {
+        #     "data_dir": LOCATION,
+        #     "subdir": "images/val",
+        #     "json_file": "val_corrected_annotations.coco.json",
+        #     "input_dim": [320, 320],
+        #     # "class_inclusion_list": class_inclusion_list,
+        #     "ignore_empty_annotations": False,
+        # }
 
-        val_data = coco2017_val_yolo_nas(
-            dataset_params=val_dataset_params,
-            dataloader_params={"batch_size": BATCH_SIZE, "num_workers": 2},
-        )
+        # val_data = coco2017_val_yolo_nas(
+        #     dataset_params=val_dataset_params,
+        #     dataloader_params={"batch_size": BATCH_SIZE, "num_workers": 2},
+        # )
 
     if data_format == "yolo":
+        LOCATION = "/home/fer/Escritorio/futstatistics/datasets/dataset6_keypoints/dataset6_keypoints_YOLOV5"
+        EXPERIMENT = "FIELD_KEYPOINTS_YOLO"
+
+        EXPERIMENT = "FIELD_KEYPOINTS_YOLO_DATA_2"
+        LOCATION = "/home/fer/Escritorio/futstatistics/datasets/dataset6_keypoints2/Soccer_Field_Detection_yolo"
+
+        BATCH_SIZE = 32
+
         dataset_params = {
             "data_dir": LOCATION,
             "train_images_dir": "train/images",
@@ -173,6 +181,7 @@ def main(data_format: str = "coco", train: bool = True, test: bool = False):
             use_static_assigner=False,
             num_classes=len(CLASSES),
             reg_max=16,
+            classification_loss_weight=4.0,
         ),
         "valid_metrics_list": [
             DetectionMetrics_050(
@@ -180,6 +189,7 @@ def main(data_format: str = "coco", train: bool = True, test: bool = False):
                 top_k_predictions=300,
                 num_cls=len(CLASSES),
                 normalize_targets=True,
+                # calc_best_score_thresholds=True,
                 post_prediction_callback=PPYoloEPostPredictionCallback(
                     score_threshold=0.01,
                     nms_top_k=1000,
