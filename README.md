@@ -26,6 +26,12 @@ It uses the previous ```YOLOV8``` model to predict the ball and a new model to p
 
 It uses the homography matrix to compute the bird view of the football field and the ball trajectory using some ```open-cv``` modules.
 
+
+## Code structure
+
+An overview of the code structure can be found [here](futstats/README.md)
+
+
 ## Instalation
 
 - Clone ByteTrack
