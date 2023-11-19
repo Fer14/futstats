@@ -36,12 +36,12 @@ def ball_homography():
     launch_ball_homography(
         yoloNas=False,
         model=model,
-        field_model_path="../models/LANDMARKS.pth",
-        field_img_path="./homography/field_2d.jpg",
-        source_video_path="../../clips/0bfacc_0.mp4",
-        target_video_path="./output_video/homography_ball/0bfacc_0.mp4",
-        target_warped_video_path="./output_video/homography_ball/0bfacc_0_warped.mp4",
-        target_ball_track_path="./output_video/homography_ball/0bfacc_0_ball.png",
+        field_model_path="../models/ckpt_best_nov.pth",
+        field_img_path="./homography/images/field_2d.jpg",
+        source_video_path="../../clips/0a2d9b_0.mp4",
+        target_video_path="./output_video/homography_ball/0a2d9b_0.mp4",
+        target_warped_video_path="./output_video/homography_ball/0a2d9b_0_warped.mp4",
+        target_ball_track_path="./output_video/homography_ball/0a2d9b_0_ball.png",
     )
 
 

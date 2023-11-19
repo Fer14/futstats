@@ -12,7 +12,6 @@ def update_stack_detections(
     detections: list[Detection],
     len_detections_stack: int = 3,
 ) -> dict[int, list[Detection]]:
-
     for detection in detections:
         if detection.tracker_id not in detections_stack:
             detections_stack[detection.tracker_id] = []
@@ -220,7 +219,6 @@ class Color:
 
 
 def draw_circle_in_box(image: np.ndarray, box_coordinates: np.ndarray, color: Color):
-
     center_x = int((box_coordinates[0] + box_coordinates[2]) / 2)
     center_y = int((box_coordinates[1] + box_coordinates[3]) / 2)
 
@@ -234,7 +232,6 @@ def draw_circle_in_box(image: np.ndarray, box_coordinates: np.ndarray, color: Co
 
 
 def draw_circle(image: np.ndarray, box_coordinates: np.ndarray, color: Color):
-
     center_x = int((box_coordinates[0] + box_coordinates[2]) / 2)
     center_y = int((box_coordinates[1] + box_coordinates[3]) / 2)
 
@@ -290,7 +287,7 @@ def draw_text(
         text,
         anchor.int_xy_tuple,
         cv2.FONT_HERSHEY_SIMPLEX,
-        0.7,
+        1,
         color.bgr_tuple,
         thickness,
         2,
@@ -401,7 +398,6 @@ def draw_marker(image: np.ndarray, anchor: Point, color: Color) -> np.ndarray:
 
 @dataclass
 class MarkerAnntator:
-
     color: Color
 
     def annotate(self, image: np.ndarray, detections: list[Detection]) -> np.ndarray:
@@ -425,9 +421,9 @@ class LandmarkAnntator:
             annotated_image = draw_text(
                 annotated_image,
                 Point(cx, cy),
-                detection.class_name,
+                str(detection.class_id),
                 Color(255, 0, 0),
-                thickness=2,
+                thickness=3,
             )
         return annotated_image
 
@@ -513,7 +509,6 @@ class PosesionAnntator:
         color_in_posession: Color,
         player_in_posession: Detection,
     ) -> np.ndarray:
-
         annotated_image = image.copy()
         team1 = posession[0]
         team2 = posession[1]
@@ -660,20 +655,24 @@ class FieldAnnotator:
     field_x: int
 
     def update(self, detections, homography_matrix):
-
         for ball_detection in detections:
             x2, y2 = ball_detection.rect.bottom_right.int_xy_tuple
             x1, y1 = ball_detection.rect.top_left.int_xy_tuple
             center = (int((x1 + x2) / 2), int((y1 + y2) / 2))
             ball_pt = np.array([center], np.float32).reshape(-1, 1, 2)
+            # try:
             ball_pt_2d = cv2.perspectiveTransform(ball_pt, homography_matrix)
+            # except:
+            #     print(ball_pt)
+            #     print(homography_matrix)
+            #     exit()
+
             ball_pt_2d = ball_pt_2d.astype(int)
             self.field = cv2.circle(
                 self.field, tuple(ball_pt_2d[0][0]), 10, (0, 0, 0), -1
             )
 
     def annotate(self, image) -> np.ndarray:
-
         annotated_image = image.copy()
 
         resized_field = cv2.resize(self.field, (self.field_width, self.field_height))
