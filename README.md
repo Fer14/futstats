@@ -26,9 +26,10 @@ It uses the previous ```YOLOV8``` model to predict the ball and a new model to p
 
 It uses the homography matrix to compute the bird view of the football field and the ball trajectory using some ```open-cv``` modules.
 
-## Structure of the code
+## Instalation
 
-Building....
-
+Clone ByteTrack
+Clone Yolov5
+pip install -e .
 
 ![logo](imgs/logos/logo_white.png)
