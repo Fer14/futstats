@@ -31,7 +31,6 @@ def clean_detections(detections: list[Detection]):
     pred_detections = detections.copy()
 
     for detection in pred_detections:
-
         if detection.class_name == "c":
             centers_found.append(detection)
         else:

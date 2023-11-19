@@ -20,13 +20,12 @@ from super_gradients.training.models.detection_models.pp_yolo_e import (
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
 
-# KEYPOINTS
+# # FIELD LANDMARSK
 MODEL_ARCH = "yolo_nas_m"
-BATCH_SIZE = 8
+BATCH_SIZE = 16
 CHECKPOINT_DIR = "./checkpoints"
-LOCATION = "../../../datasets/dataset6_keypoints/dataset6_keypoints_coco"
+LOCATION = "../../../datasets/dataset5_field_2/"
 CLASSES = [
-    "0",
     "1",
     "10",
     "11",
@@ -35,19 +34,7 @@ CLASSES = [
     "14",
     "15",
     "16",
-    "17",
-    "18",
-    "19",
     "2",
-    "20",
-    "21",
-    "22",
-    "23",
-    "24",
-    "25",
-    "26",
-    "27",
-    "28",
     "3",
     "4",
     "5",
@@ -55,45 +42,15 @@ CLASSES = [
     "7",
     "8",
     "9",
+    "c",
 ]
 
 NUM_CLASES = len(CLASSES)
-EXPERIMENT = "FIELD_KEYPOINTS"
-EPOCHS = 200
-
-
-# # FIELD LANDMARSK
-# MODEL_ARCH = "yolo_nas_m"
-# BATCH_SIZE = 16
-# CHECKPOINT_DIR = "./checkpoints"
-# LOCATION = "../../../datasets/dataset5_field_2/"
-# CLASSES = [
-#     "1",
-#     "10",
-#     "11",
-#     "12",
-#     "13",
-#     "14",
-#     "15",
-#     "16",
-#     "2",
-#     "3",
-#     "4",
-#     "5",
-#     "6",
-#     "7",
-#     "8",
-#     "9",
-#     "c",
-# ]
-
-# NUM_CLASES = len(CLASSES)
-# EXPERIMENT = "FIELD_LANDMARKS"
-# EPOCHS = 100
+EXPERIMENT = "FIELD_LANDMARKS"
+EPOCHS = 100
 
 
 def main(data_format: str = "coco", train: bool = True, test: bool = True):
-
     if data_format == "coco":
         train_dataset_params = {
             "data_dir": LOCATION,
@@ -237,7 +194,6 @@ def main(data_format: str = "coco", train: bool = True, test: bool = True):
     trainer = Trainer(experiment_name=EXPERIMENT, ckpt_root_dir=CHECKPOINT_DIR)
 
     if train:
-
         trainer.train(
             model=model,
             training_params=train_params,
@@ -246,7 +202,6 @@ def main(data_format: str = "coco", train: bool = True, test: bool = True):
         )
 
     if test:
-
         best_model = models.get(
             MODEL_ARCH,
             num_classes=NUM_CLASES,

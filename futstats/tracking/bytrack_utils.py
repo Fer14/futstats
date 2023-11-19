@@ -39,6 +39,7 @@ for frame in frames:
     detections = match_detections_with_tracks(detections=detections, tracks=tracks)
 """
 
+
 # converts list[Detection] into format that can be consumed by match_detections_with_tracks function
 def detections2boxes(
     detections: list[Detection], with_confidence: bool = True
@@ -65,23 +66,23 @@ def detections2boxes(
     )
 
 
-def detections2norfairDetection(
-    detections: list[Detection], with_confidence: bool = True
-) -> np.ndarray:
+# def detections2norfairDetection(
+#     detections: list[Detection], with_confidence: bool = True
+# ) -> np.ndarray:
 
-    norfairDetections = []
+#     norfairDetections = []
 
-    for detection in detections:
+#     for detection in detections:
 
-        x2, y2 = detection.rect.bottom_right.int_xy_tuple
-        x1, y1 = detection.rect.top_left.int_xy_tuple
-        center_x = int((x1 + x2) / 2)
-        center_y = int((y1 + y2) / 2)
+#         x2, y2 = detection.rect.bottom_right.int_xy_tuple
+#         x1, y1 = detection.rect.top_left.int_xy_tuple
+#         center_x = int((x1 + x2) / 2)
+#         center_y = int((y1 + y2) / 2)
 
-        norfairDetection = nfDetection(points=np.array([center_x, center_y]))
-        norfairDetections.append(norfairDetection)
+#         norfairDetection = nfDetection(points=np.array([center_x, center_y]))
+#         norfairDetections.append(norfairDetection)
 
-    return norfairDetections
+#     return norfairDetections
 
 
 # converts list[STrack] into format that can be consumed by match_detections_with_tracks function
@@ -93,7 +94,6 @@ def tracks2boxes(tracks: list[STrack]) -> np.ndarray:
 def match_detections_with_tracks(
     detections: list[Detection], tracks: list[STrack]
 ) -> list[Detection]:
-
     detection_boxes = detections2boxes(detections=detections, with_confidence=False)
     tracks_boxes = tracks2boxes(tracks=tracks)
     iou = box_iou_batch(tracks_boxes, detection_boxes)
