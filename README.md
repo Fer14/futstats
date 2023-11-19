@@ -28,8 +28,22 @@ It uses the homography matrix to compute the bird view of the football field and
 
 ## Instalation
 
-Clone ByteTrack
-Clone Yolov5
+- Clone ByteTrack
+- Clone Yolov5
+- Install project with :
+```python
 pip install -e .
+```
+
+## Usage
+
+```python
+python launch.py hsv-team-posession-tracking
+```
+or
+```python
+python launch.py ball-homography
+```
+
 
 ![logo](imgs/logos/logo_white.png)
