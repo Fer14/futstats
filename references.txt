@@ -57,6 +57,11 @@ https://www.kaggle.com/competitions/dfl-bundesliga-data-shootout/data
     https://universe.roboflow.com/mo-c9fej/football-field-landmarks-nlfje
     https://universe.roboflow.com/final-year-project-7d4za/soccam-keypoints
 
+    https://universe.roboflow.com/new-workspace-8bwwt/football-field-landmarks/dataset/16
+    https://universe.roboflow.com/manolo-jm3bz/football-keypoint-detector/dataset/4
+    https://universe.roboflow.com/mohamed-elganainy/football-field-new/dataset/3
+    https://universe.roboflow.com/mohamed-elganainy/football-field-new/dataset/2
+
     ## FIELD SEGMENTATION
     https://universe.roboflow.com/mohamed-badreldin-hh84s/field-xcovi/dataset/2
 
@@ -96,3 +101,6 @@ https://medium.com/@kosolapov.aetp/tennis-analysis-using-deep-learning-and-machi
 # point tracking
 https://github.com/aharley/pips
 https://github.com/google-deepmind/tapnet
+
+# FUTURE IDEAS
+https://universe.roboflow.com/wai-ming-lam-qiu9k/football-field-n8ntt
