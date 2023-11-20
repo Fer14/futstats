@@ -36,7 +36,7 @@ def ball_homography():
     launch_ball_homography(
         yoloNas=False,
         model=model,
-        field_model_path="../models/ckpt_best_nov.pth",
+        field_model_path="../models/ckpt_best_nov_new.pth",
         field_img_path="./homography/images/field_2d.jpg",
         source_video_path="../../clips/0a2d9b_0.mp4",
         target_video_path="./output_video/homography_ball/0a2d9b_0.mp4",

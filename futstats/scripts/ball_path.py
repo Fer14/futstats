@@ -16,41 +16,6 @@ from video.video_utils import VideoConfig, generate_frames, get_video_writer
 
 logging.disable(logging.INFO)
 
-CLASSES = {
-    "0": (60, 1300),
-    "1": (60, 60),
-    "2": (60, 310),
-    "3": (1020, 60),
-    "4": (1020, 680),
-    "5": (1020, 1300),
-    "6": (2000, 60),
-    "7": (2000, 310),
-    "8": (1700, 310),
-    "9": (2000, 520),
-    "10": (1900, 520),
-    "11": (2000, 850),
-    "12": (1900, 850),
-    "13": (360, 310),
-    "14": (2000, 1050),
-    "15": (1700, 1050),
-    "16": (2000, 1300),
-    "17": (360, 550),
-    "18": (360, 820),
-    "19": (1020, 520),
-    "20": (1020, 860),
-    "21": (1700, 550),
-    "22": (1700, 820),
-    "23": (60, 520),
-    "24": (160, 520),
-    "25": (60, 850),
-    "26": (160, 850),
-    "27": (60, 1050),
-    "28": (360, 1050),
-}
-
-
-NUM_CLASES = len(CLASSES)
-
 
 def launch_ball_homography(
     yoloNas: bool,
@@ -66,7 +31,7 @@ def launch_ball_homography(
 
     field_model = models.get(
         "yolo_nas_s",
-        num_classes=NUM_CLASES,
+        num_classes=29,
         checkpoint_path=field_model_path,
     )
 
@@ -105,18 +70,19 @@ def launch_ball_homography(
             detections=detections, class_name="ball"
         )
 
-        field_results = list(field_model.predict(frame, conf=0.35))[0]
-        field_detections = Detection.from_yoloNas(pred=field_results)
+        if iteration % 10 == 0:
+            field_results = list(field_model.predict(frame, conf=0.35))[0]
+            field_detections = Detection.from_yoloNas(pred=field_results)
 
-        src_points, dst_points = parse_detections(detections=field_detections)
+            src_points, dst_points = parse_detections(detections=field_detections)
 
-        if len(src_points) >= 4:
-            pred_homo = get_perspective_transform(
-                np.array(src_points), np.array(dst_points)
-            )
-            if pred_homo is not None:
-                ## sustituir lo de arriba por cv2.findHomography(src, dst, cv2.RANSAC, 5)
-                field_annotator.update(ball_detections, pred_homo)
+            if len(src_points) >= 4:
+                pred_homo = get_perspective_transform(
+                    np.array(src_points), np.array(dst_points)
+                )
+                if pred_homo is not None:
+                    ## sustituir lo de arriba por cv2.findHomography(src, dst, cv2.RANSAC, 5)
+                    field_annotator.update(ball_detections, pred_homo)
 
         # annotate video frame
         annotated_image = frame.copy()
@@ -126,18 +92,23 @@ def launch_ball_homography(
             image=annotated_image, detections=ball_detections
         )
 
-        annotated_image = landmarks_annotator.annotate(
-            image=annotated_image, detections=field_detections
-        )
+        if iteration % 10 == 0:
+            annotated_image = landmarks_annotator.annotate(
+                image=annotated_image, detections=field_detections
+            )
 
         annotated_image = field_annotator.annotate(image=annotated_image)
 
         # save video frame
         video_writer.write(annotated_image)
-        if len(src_points) >= 4 and pred_homo is not None:
-            video_writer_homography.write(
-                cv2.warpPerspective(frame, pred_homo, (field.shape[1], field.shape[0]))
-            )
+
+        if iteration % 10 == 0:
+            if len(src_points) >= 4 and pred_homo is not None:
+                video_writer_homography.write(
+                    cv2.warpPerspective(
+                        frame, pred_homo, (field.shape[1], field.shape[0])
+                    )
+                )
 
     # close output video
     video_writer.release()
