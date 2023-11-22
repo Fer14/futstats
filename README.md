@@ -6,7 +6,7 @@ Football Statistics generator with Python
 
 ## Introduction
 
-This Python code provides a basic statistics generator than can be use to asses the percentage of posession for each team, the heatmap of the ball and diferent players.
+This Python code provides a basic statistic generator than can be use to asses the percentage of posession for each team, the heatmap of the ball and diferent players.
 
 ## Ball posession
 
