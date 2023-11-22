@@ -70,19 +70,19 @@ def launch_ball_homography(
             detections=detections, class_name="ball"
         )
 
-        if iteration % 10 == 0:
-            field_results = list(field_model.predict(frame, conf=0.35))[0]
-            field_detections = Detection.from_yoloNas(pred=field_results)
+        # if iteration % 10 == 0:
+        field_results = list(field_model.predict(frame, conf=0.35))[0]
+        field_detections = Detection.from_yoloNas(pred=field_results)
 
-            src_points, dst_points = parse_detections(detections=field_detections)
+        src_points, dst_points = parse_detections(detections=field_detections)
 
-            if len(src_points) >= 4:
-                pred_homo = get_perspective_transform(
-                    np.array(src_points), np.array(dst_points)
-                )
-                if pred_homo is not None:
-                    ## sustituir lo de arriba por cv2.findHomography(src, dst, cv2.RANSAC, 5)
-                    field_annotator.update(ball_detections, pred_homo)
+        if len(src_points) >= 4:
+            pred_homo = get_perspective_transform(
+                np.array(src_points), np.array(dst_points)
+            )
+            if pred_homo is not None:
+                ## sustituir lo de arriba por cv2.findHomography(src, dst, cv2.RANSAC, 5)
+                field_annotator.update(ball_detections, pred_homo)
 
         # annotate video frame
         annotated_image = frame.copy()
@@ -92,23 +92,21 @@ def launch_ball_homography(
             image=annotated_image, detections=ball_detections
         )
 
-        if iteration % 10 == 0:
-            annotated_image = landmarks_annotator.annotate(
-                image=annotated_image, detections=field_detections
-            )
+        # if iteration % 10 == 0:
+        annotated_image = landmarks_annotator.annotate(
+            image=annotated_image, detections=field_detections
+        )
 
         annotated_image = field_annotator.annotate(image=annotated_image)
 
         # save video frame
         video_writer.write(annotated_image)
 
-        if iteration % 10 == 0:
-            if len(src_points) >= 4 and pred_homo is not None:
-                video_writer_homography.write(
-                    cv2.warpPerspective(
-                        frame, pred_homo, (field.shape[1], field.shape[0])
-                    )
-                )
+        # if iteration % 10 == 0:
+        if len(src_points) >= 4 and pred_homo is not None:
+            video_writer_homography.write(
+                cv2.warpPerspective(frame, pred_homo, (field.shape[1], field.shape[0]))
+            )
 
     # close output video
     video_writer.release()
