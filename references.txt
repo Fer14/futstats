@@ -106,3 +106,6 @@ https://github.com/google-deepmind/tapnet
 
 # FUTURE IDEAS
 https://universe.roboflow.com/wai-ming-lam-qiu9k/football-field-n8ntt
+
+## KALMAN FILTER
+https://machinelearningspace.com/2d-object-tracking-using-kalman-filter/

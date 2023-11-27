@@ -28,7 +28,6 @@ def launch_hsv_team_posession_tracking(
     source_video_path: str,
     player_in_possession_proximity: int = 45,
 ):
-
     # initiate video writer
     video_config = VideoConfig(fps=30, width=1920, height=1080)
     video_writer = get_video_writer(
@@ -57,7 +56,6 @@ def launch_hsv_team_posession_tracking(
 
     # loop over frames
     for iteration, frame in enumerate(tqdm(frame_iterator, total=750)):
-
         # run detector
         if yoloNas:
             results = list(model.predict(frame, conf=0.25))[0]

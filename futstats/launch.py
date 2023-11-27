@@ -3,6 +3,7 @@ import torch
 
 from scripts.hsv_team_posession_tracking import launch_hsv_team_posession_tracking
 from scripts.ball_path import launch_ball_homography
+from scripts.field_tracking import launch_field_tracking
 import logging
 import os
 
@@ -42,6 +43,18 @@ def ball_homography():
         target_video_path="./output_video/homography_ball/0a2d9b_0.mp4",
         target_warped_video_path="./output_video/homography_ball/0a2d9b_0_warped.mp4",
         target_ball_track_path="./output_video/homography_ball/0a2d9b_0_ball.png",
+    )
+
+
+@app.command()
+def field_tracking():
+    os.makedirs("./output_video/field_tracking/", exist_ok=True)
+
+    launch_field_tracking(
+        field_model_path="../models/ckpt_best_nov_new.pth",
+        field_img_path="./homography/images/field_2d.jpg",
+        source_video_path="../../clips/0a2d9b_0.mp4",
+        target_video_path="./output_video/field_tracking/0a2d9b_0.mp4",
     )
 
 
