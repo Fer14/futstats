@@ -19,6 +19,9 @@ from tensorflow.keras.layers import (
     Flatten,
     Concatenate,
     Dense,
+    Dropout,
+    BatchNormalization,
+    Activation,
 )
 from tensorflow.keras.models import Model
 from keras.utils import Sequence
@@ -68,21 +71,31 @@ class HomographyModel:
         self.model = self._build_model()
 
     def _build_model(self):
-        pretrained_model = tf.keras.applications.EfficientNetV2S(
+        pretrained_model = tf.keras.applications.EfficientNetV2M(
             weights="imagenet", include_top=False, input_shape=self.input_shape
         )
         for layer in pretrained_model.layers:
             layer.trainable = True
 
         image_flatten_layer = Flatten()(pretrained_model.output)
-
         input_layer = image_flatten_layer
         inputs_ = pretrained_model.input
 
-        dense_layer_1 = Dense(36, activation="relu")(input_layer)
-        dense_layer_2 = Dense(18, activation="relu")(dense_layer_1)
-        dense_layer = Dense(9, activation="relu")(dense_layer_2)
-        output_layer = Reshape((3, 3))(dense_layer)
+        dense_layer_1 = Dense(36)(input_layer)
+        # batch_norm_1 = BatchNormalization()(dense_layer_1)
+        activation_1 = Activation("relu")(dense_layer_1)
+        # dropout_layer = Dropout(rate=0.1)(activation_1)
+
+        dense_layer_2 = Dense(18)(activation_1)
+        # batch_norm_2 = BatchNormalization()(dense_layer_2)
+        activation_2 = Activation("relu")(dense_layer_2)
+        # dropout_layer2 = Dropout(rate=0.1)(activation_2)
+
+        dense_layer = Dense(9)(activation_2)
+        # batch_norm_3 = BatchNormalization()(dense_layer)
+        activation_3 = Activation("relu")(dense_layer)
+
+        output_layer = Reshape((3, 3))(activation_3)
 
         model = Model(
             inputs=inputs_,
@@ -92,7 +105,7 @@ class HomographyModel:
 
     def train(self, epochs: int, batch_size: int, train_dataset, validation_dataset):
         self.model.compile(
-            optimizer=keras.optimizers.Adam(learning_rate=0.00001),
+            optimizer=keras.optimizers.Adam(learning_rate=0.000001),
             metrics=self.metrics,
             loss="mse",
         )
@@ -106,11 +119,11 @@ class HomographyModel:
             verbose=1,  # Display messages when checkpoints are saved
         )
 
-        early_stopping = EarlyStopping(monitor="val_loss", patience=10)
+        early_stopping = EarlyStopping(monitor="val_loss", patience=200)
 
         reduce_lr = (
             tf.keras.callbacks.ReduceLROnPlateau(
-                patience=5, verbose=1, cooldown=10, min_lr=0.00001
+                patience=60, verbose=1, cooldown=50, min_lr=0.0000001
             ),
         )
 
@@ -179,17 +192,27 @@ def get_number_from_string(s):
         return 0  # If no number is found, return 0
 
 
-def main(train: bool = True, double_input: bool = False):
+def main(
+    train: bool = True,
+):
     DATA_DIR = (
         "/home/fer/Escritorio/futstatistics/datasets/narya/homography_dataset/dataset"
     )
-    BATCH_SIZE = 8
+    BATCH_SIZE = 64
+    EPOCHS = 600
 
     train_x = glob.glob(os.path.join(DATA_DIR, "train_img") + "/*.jpg")
     train_y = glob.glob(os.path.join(DATA_DIR, "train_homo") + "/*.npy")
 
     val_x = glob.glob(os.path.join(DATA_DIR, "test_img") + "/*.jpg")
     val_y = glob.glob(os.path.join(DATA_DIR, "test_homo") + "/*.npy")
+
+    # resplit train and val
+    x = train_x + val_x
+    y = train_y + val_y
+
+    # use split train test from sklearn
+    train_x, val_x, train_y, val_y = train_test_split(x, y, test_size=0.2)
 
     print(f"{len(train_x)} training images found")
     assert len(train_x) == len(train_y)
@@ -225,7 +248,7 @@ def main(train: bool = True, double_input: bool = False):
 
     if train:
         model.train(
-            epochs=100,
+            epochs=EPOCHS,
             batch_size=BATCH_SIZE,
             train_dataset=train_dataset,
             validation_dataset=test_dataset,

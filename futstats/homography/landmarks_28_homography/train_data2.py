@@ -66,10 +66,10 @@ def main(data_format: str = "coco", train: bool = True, test: bool = False):
 
         EXPERIMENT = "FIELD_KEYPOINTS_COCO_DATA_2"
         LOCATION = "/home/fer/Escritorio/futstatistics/datasets/field/keypoints3/"
-        BATCH_SIZE = 32
+        BATCH_SIZE = 128
         INPUT_DIM = [
-            640,
-            640,
+            320,
+            320,
         ]  # you have to make sure the img size can be divided by 32. That's the rule. :)
 
         train_dataset_params = {

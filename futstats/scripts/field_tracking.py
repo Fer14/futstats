@@ -7,6 +7,7 @@ from annotations.anns import (
     Detection,
     LandmarkAnntator,
     FieldAnnotator,
+    BoxAnntator,
     filter_detections_by_class,
 )
 from homography.utils import parse_detections, get_perspective_transform
@@ -17,6 +18,7 @@ from tracking.bytrack_utils import (
     BYTETrackerArgs,
     detections2boxes,
     match_detections_with_tracks,
+    tracks2boxes,
 )
 from yolox.tracker.byte_tracker import BYTETracker, STrack
 
@@ -48,26 +50,33 @@ def launch_field_tracking(
     frame_iterator = iter(generate_frames(video_file=source_video_path))
 
     landmarks_annotator = LandmarkAnntator()
+    box_annotator = BoxAnntator()
 
     # loop over frames
     for iteration, frame in enumerate(tqdm(frame_iterator, total=750)):
         field_results = list(field_model.predict(frame, conf=0.35))[0]
         field_detections = Detection.from_yoloNas(pred=field_results)
 
-        tracks = byte_tracker.update(
-            output_results=detections2boxes(detections=field_detections),
-            img_info=frame.shape,
-            img_size=frame.shape,
-        )
+        if field_detections != []:
+            tracks = byte_tracker.update(
+                output_results=detections2boxes(detections=field_detections),
+                img_info=frame.shape,
+                img_size=frame.shape,
+            )
 
-        tracked_detections = match_detections_with_tracks(
-            detections=field_detections, tracks=tracks
-        )
+        tracked_boxes = tracks2boxes(tracks)
+
+        # tracked_detections = match_detections_with_tracks(
+        #     detections=field_detections, tracks=tracks
+        # )
 
         annotated_image = frame.copy()
-        annotated_image = landmarks_annotator.annotate(
-            image=annotated_image, detections=tracked_detections
+        annotated_image = box_annotator.annotate(
+            image=annotated_image, boxes=tracked_boxes
         )
+        # annotated_image = landmarks_annotator.annotate(
+        #     image=annotated_image, detections=tracked_detections
+        # )
 
         # save video frame
         video_writer.write(annotated_image)

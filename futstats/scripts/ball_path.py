@@ -51,7 +51,7 @@ def launch_ball_homography(
     ball_marker_annotator = BallAnntator()
     landmarks_annotator = LandmarkAnntator()
     field_annotator = FieldAnnotator(
-        field=field, field_height=273, field_width=410, field_y=1005, field_x=100
+        field=field, field_height=273, field_width=410, field_y=100, field_x=1005
     )
 
     # loop over frames

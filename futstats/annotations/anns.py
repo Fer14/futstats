@@ -150,6 +150,26 @@ class Detection:
             )
         return result
 
+    @classmethod
+    def from_roboflow(cls, preds: dict) -> list[Detection]:
+        preds = preds["predictions"]
+        result = []
+        for pred in preds:
+            result.append(
+                Detection(
+                    rect=Rect(
+                        x=pred["x"],
+                        y=pred["y"],
+                        width=pred["width"],
+                        height=pred["height"],
+                    ),
+                    class_id=int(pred["class_id"]),
+                    class_name=int(pred["class_id"]),
+                    confidence=float(pred["confidence"]),
+                )
+            )
+        return result
+
     def get_color(self, image: np.ndarray) -> Color:
         x2, y2 = self.rect.bottom_right.int_xy_tuple
         x1, y1 = self.rect.top_left.int_xy_tuple
@@ -429,6 +449,22 @@ class LandmarkAnntator:
 
 
 @dataclass
+class BoxAnntator:
+    def annotate(self, image: np.ndarray, boxes: list[Detection]) -> np.ndarray:
+        annotated_image = image.copy()
+        for boxes in boxes:
+            x, y, w, h = boxes.astype(int)
+            annotated_image = cv2.rectangle(
+                annotated_image,
+                (x, y),
+                (w, h),
+                (0, 0, 255),
+                3,
+            )
+        return annotated_image
+
+
+@dataclass
 class BallAnntator:
     def annotate(self, image: np.ndarray, detections: list[Detection]) -> np.ndarray:
         annotated_image = image.copy()
@@ -654,33 +690,40 @@ class FieldAnnotator:
     field_y: int
     field_x: int
 
-    def update(self, detections, homography_matrix):
+    def update(self, detections, homography_matrix, dsize=None):
         for ball_detection in detections:
             x2, y2 = ball_detection.rect.bottom_right.int_xy_tuple
             x1, y1 = ball_detection.rect.top_left.int_xy_tuple
             center = (int((x1 + x2) / 2), int((y1 + y2) / 2))
+            if dsize is not None:
+                centerx = center[0] / 1920 * dsize[0]
+                centery = center[1] / 1080 * dsize[1]
+                center = (centerx, centery)
             ball_pt = np.array([center], np.float32).reshape(-1, 1, 2)
-            # try:
             ball_pt_2d = cv2.perspectiveTransform(ball_pt, homography_matrix)
-            # except:
-            #     print(ball_pt)
-            #     print(homography_matrix)
-            #     exit()
-
             ball_pt_2d = ball_pt_2d.astype(int)
             self.field = cv2.circle(
-                self.field, tuple(ball_pt_2d[0][0]), 10, (0, 0, 0), -1
+                self.field, tuple(ball_pt_2d[0][0]), 5, (0, 0, 0), -1
             )
+
+            # if (
+            #     ball_pt_2d[0][0][0] < 0
+            #     or ball_pt_2d[0][0][0] > 320
+            #     or ball_pt_2d[0][0][1] < 0
+            #     or ball_pt_2d[0][0][1] > 320
+            # ):
+            #     print("ball out of bounds")
+            #     print(ball_pt_2d[0][0][0], ball_pt_2d[0][0][1])
 
     def annotate(self, image) -> np.ndarray:
         annotated_image = image.copy()
 
         resized_field = cv2.resize(self.field, (self.field_width, self.field_height))
-        h, w, _ = annotated_image.shape
+        field_region = resized_field.shape[:2]
+
         annotated_image[
-            h - self.field_y : h - (self.field_y - self.field_height),
-            w - (self.field_width + self.field_x) : w - self.field_x,
-            :,
+            self.field_y : self.field_y + field_region[0],
+            self.field_x : self.field_x + field_region[1],
         ] = resized_field
 
         return annotated_image
